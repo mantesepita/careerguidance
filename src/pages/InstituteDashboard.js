@@ -1,419 +1,936 @@
-// src/pages/InstituteDashboard.js
-import React, { useState, useEffect } from 'react';
-import { Routes, Route, Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { getDocument, queryDocuments } from '../firebase/helpers';
-
-// Import components
-import InstituteProfile from '../components/institute/InstituteProfile';
-import ManageFaculties from '../components/institute/ManageFaculties';
-import ManageCourses from '../components/institute/ManageCourses';
-import ViewApplications from '../components/institute/ViewApplications';
-import PublishAdmissions from '../components/institute/PublishAdmissions';
+import React, { useState } from 'react';
+import { Home, Building, Users, BookOpen, FileCheck, Calendar, LogOut, Menu, X, Bell, TrendingUp, AlertCircle } from 'lucide-react';
 
 const InstituteDashboard = () => {
-  const { currentUser, userData, logout } = useAuth();
-  const [instituteData, setInstituteData] = useState(null);
-  const [stats, setStats] = useState({
-    totalFaculties: 0,
-    totalCourses: 0,
-    totalApplications: 0,
-    pendingApplications: 0
+  const [activePage, setActivePage] = useState('home');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  const instituteData = {
+    name: 'University of Excellence',
+    email: 'admin@university.edu',
+    status: 'active'
+  };
+
+  const stats = {
+    totalFaculties: 8,
+    totalCourses: 45,
+    totalApplications: 324,
+    pendingApplications: 28
+  };
+
+  const navigation = [
+    { id: 'home', label: 'Home', icon: Home },
+    { id: 'profile', label: 'Institution Profile', icon: Building },
+    { id: 'faculties', label: 'Manage Faculties', icon: Users },
+    { id: 'courses', label: 'Manage Courses', icon: BookOpen },
+    { id: 'applications', label: 'Student Applications', icon: FileCheck, badge: stats.pendingApplications },
+    { id: 'admissions', label: 'Publish Admissions', icon: Calendar }
+  ];
+
+  const renderContent = () => {
+    switch(activePage) {
+      case 'home':
+        return <HomePage instituteData={instituteData} stats={stats} setActivePage={setActivePage} />;
+      case 'profile':
+        return <ProfilePage />;
+      case 'faculties':
+        return <FacultiesPage />;
+      case 'courses':
+        return <CoursesPage />;
+      case 'applications':
+        return <ApplicationsPage stats={stats} />;
+      case 'admissions':
+        return <AdmissionsPage />;
+      default:
+        return <HomePage instituteData={instituteData} stats={stats} setActivePage={setActivePage} />;
+    }
+  };
+
+  // Inline styles
+  const styles = {
+    container: {
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #fffbeb, #fef2f2, #fffbeb)',
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    },
+    nav: {
+      position: 'sticky',
+      top: 0,
+      zIndex: 50,
+      background: 'rgba(255, 255, 255, 0.7)',
+      backdropFilter: 'blur(20px)',
+      borderBottom: '1px solid #fed7aa'
+    },
+    navContainer: {
+      maxWidth: '80rem',
+      margin: '0 auto',
+      padding: '0 1rem'
+    },
+    navContent: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      height: '4rem'
+    },
+    logo: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.75rem'
+    },
+    logoIcon: {
+      width: '2.5rem',
+      height: '2.5rem',
+      background: 'linear-gradient(135deg, #f97316, #ec4899)',
+      borderRadius: '0.75rem',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+    },
+    logoText: {
+      fontSize: '1.25rem',
+      fontWeight: 'bold',
+      background: 'linear-gradient(to right, #dc2626, #ec4899)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text'
+    },
+    logoSubtext: {
+      fontSize: '0.75rem',
+      color: '#4b5563'
+    },
+    desktopNav: {
+      display: 'none',
+      alignItems: 'center',
+      gap: '1.5rem'
+    },
+    bellButton: {
+      position: 'relative',
+      padding: '0.5rem',
+      borderRadius: '0.5rem',
+      transition: 'background-color 0.3s',
+      border: 'none',
+      background: 'transparent',
+      cursor: 'pointer'
+    },
+    bellButtonHover: {
+      backgroundColor: '#fed7aa'
+    },
+    badge: {
+      position: 'absolute',
+      top: '0.25rem',
+      right: '0.25rem',
+      width: '1.25rem',
+      height: '1.25rem',
+      backgroundColor: '#ef4444',
+      borderRadius: '50%',
+      color: 'white',
+      fontSize: '0.75rem',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      fontWeight: 'bold'
+    },
+    userSection: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.75rem',
+      paddingLeft: '1rem',
+      borderLeft: '1px solid #fed7aa'
+    },
+    userName: {
+      fontSize: '0.875rem',
+      fontWeight: '600',
+      color: '#1f2937'
+    },
+    userRole: {
+      fontSize: '0.75rem',
+      color: '#6b7280'
+    },
+    logoutButton: {
+      padding: '0.5rem',
+      borderRadius: '0.5rem',
+      transition: 'all 0.3s',
+      border: 'none',
+      background: 'transparent',
+      cursor: 'pointer'
+    },
+    logoutButtonHover: {
+      backgroundColor: '#fee2e2'
+    },
+    mobileMenuButton: {
+      padding: '0.5rem',
+      borderRadius: '0.5rem',
+      transition: 'background-color 0.3s',
+      border: 'none',
+      background: 'transparent',
+      cursor: 'pointer'
+    },
+    mobileMenuButtonHover: {
+      backgroundColor: '#fed7aa'
+    },
+    mobileMenu: {
+      position: 'fixed',
+      inset: 0,
+      top: '4rem',
+      zIndex: 40,
+      backgroundColor: 'rgba(255, 255, 255, 0.95)',
+      backdropFilter: 'blur(20px)'
+    },
+    mobileMenuContent: {
+      padding: '1rem',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.5rem'
+    },
+    navButton: {
+      width: '100%',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.75rem',
+      padding: '0.75rem 1rem',
+      borderRadius: '0.75rem',
+      transition: 'all 0.3s',
+      border: 'none',
+      cursor: 'pointer',
+      position: 'relative'
+    },
+    navButtonActive: {
+      background: 'linear-gradient(to right, #f97316, #ec4899)',
+      color: 'white',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+    },
+    navButtonInactive: {
+      backgroundColor: 'transparent',
+      color: '#374151'
+    },
+    navButtonHover: {
+      backgroundColor: '#fed7aa'
+    },
+    navButtonActiveHover: {
+      transform: 'scale(1.05)'
+    },
+    sidebar: {
+      display: 'none',
+      width: '18rem',
+      minHeight: '100vh',
+      padding: '1.5rem'
+    },
+    sidebarNav: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.5rem'
+    },
+    mainContent: {
+      flex: 1,
+      padding: '1.5rem'
+    },
+    mediaQueries: {
+      md: '@media (min-width: 768px)'
+    }
+  };
+
+  const [hoverStates, setHoverStates] = useState({
+    bellButton: false,
+    logoutButton: false,
+    mobileMenuButton: false,
+    navButtons: {}
   });
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    loadInstituteData();
-    loadStats();
-  }, [currentUser]);
-
-  const loadInstituteData = async () => {
-    if (currentUser) {
-      const result = await getDocument('institutions', currentUser.uid);
-      if (result.success) {
-        setInstituteData(result.data);
-      }
-    }
+  const handleMouseEnter = (item, type) => {
+    setHoverStates(prev => ({
+      ...prev,
+      [type]: { ...prev[type], [item]: true }
+    }));
   };
 
-  const loadStats = async () => {
-    if (currentUser) {
-      // Load faculties
-      const facultiesResult = await queryDocuments('faculties', [
-        { field: 'institutionId', operator: '==', value: currentUser.uid }
-      ]);
-
-      // Load courses
-      const coursesResult = await queryDocuments('courses', [
-        { field: 'institutionId', operator: '==', value: currentUser.uid }
-      ]);
-
-      // Load applications
-      const applicationsResult = await queryDocuments('applications', [
-        { field: 'institutionId', operator: '==', value: currentUser.uid }
-      ]);
-
-      setStats({
-        totalFaculties: facultiesResult.success ? facultiesResult.data.length : 0,
-        totalCourses: coursesResult.success ? coursesResult.data.length : 0,
-        totalApplications: applicationsResult.success ? applicationsResult.data.length : 0,
-        pendingApplications: applicationsResult.success 
-          ? applicationsResult.data.filter(app => app.status === 'pending').length 
-          : 0
-      });
-    }
-  };
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
-
-  const refreshData = () => {
-    loadInstituteData();
-    loadStats();
+  const handleMouseLeave = (item, type) => {
+    setHoverStates(prev => ({
+      ...prev,
+      [type]: { ...prev[type], [item]: false }
+    }));
   };
 
   return (
     <div style={styles.container}>
-      {/* Sidebar Navigation */}
-      <div style={styles.sidebar}>
-        <div style={styles.logo}>
-          <h2 style={styles.logoText}> Institution Portal</h2>
-          <p style={styles.logoSubtext}>Management Dashboard</p>
-        </div>
+      {/* Top Navigation Bar */}
+      <nav style={styles.nav}>
+        <div style={styles.navContainer}>
+          <div style={styles.navContent}>
+            {/* Logo */}
+            <div style={styles.logo}>
+              <div style={styles.logoIcon}>
+                <Building size={24} color="white" />
+              </div>
+              <div>
+                <h1 style={styles.logoText}>Institution Portal</h1>
+                <p style={styles.logoSubtext}>Management Dashboard</p>
+              </div>
+            </div>
 
-        <nav style={styles.nav}>
-          <Link to="/institute" style={styles.navItem}>
-            <span style={styles.navIcon}></span>
-            <span>Home</span>
-          </Link>
-          <Link to="/institute/profile" style={styles.navItem}>
-            <span style={styles.navIcon}></span>
-            <span>Institution Profile</span>
-          </Link>
-          <Link to="/institute/faculties" style={styles.navItem}>
-            <span style={styles.navIcon}></span>
-            <span>Manage Faculties</span>
-          </Link>
-          <Link to="/institute/courses" style={styles.navItem}>
-            <span style={styles.navIcon}></span>
-            <span>Manage Courses</span>
-          </Link>
-          <Link to="/institute/applications" style={styles.navItem}>
-            <span style={styles.navIcon}></span>
-            <span>Student Applications</span>
-            {stats.pendingApplications > 0 && (
-              <span style={styles.badge}>{stats.pendingApplications}</span>
-            )}
-          </Link>
-          <Link to="/institute/admissions" style={styles.navItem}>
-            <span style={styles.navIcon}></span>
-            <span>Publish Admissions</span>
-          </Link>
-        </nav>
+            {/* Desktop Navigation */}
+            <div style={styles.desktopNav}>
+              <button 
+                style={{
+                  ...styles.bellButton,
+                  ...(hoverStates.bellButton && styles.bellButtonHover)
+                }}
+                onMouseEnter={() => handleMouseEnter('bellButton', 'bellButton')}
+                onMouseLeave={() => handleMouseLeave('bellButton', 'bellButton')}
+              >
+                <Bell size={20} color="#4b5563" />
+                {stats.pendingApplications > 0 && (
+                  <span style={styles.badge}>{stats.pendingApplications}</span>
+                )}
+              </button>
+              <div style={styles.userSection}>
+                <div style={{ textAlign: 'right' }}>
+                  <p style={styles.userName}>{instituteData.name}</p>
+                  <p style={styles.userRole}>Institution</p>
+                </div>
+                <button 
+                  style={{
+                    ...styles.logoutButton,
+                    ...(hoverStates.logoutButton && styles.logoutButtonHover)
+                  }}
+                  onMouseEnter={() => handleMouseEnter('logoutButton', 'logoutButton')}
+                  onMouseLeave={() => handleMouseLeave('logoutButton', 'logoutButton')}
+                >
+                  <LogOut size={20} color="#4b5563" />
+                </button>
+              </div>
+            </div>
 
-        <div style={styles.sidebarFooter}>
-          <div style={styles.userInfo}>
-            <p style={styles.userName}>{instituteData?.name || userData?.email}</p>
-            <p style={styles.userRole}>Institution</p>
-          </div>
-          <button onClick={handleLogout} style={styles.logoutBtn}>
-             Logout
-          </button>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div style={styles.mainContent}>
-        <Routes>
-          <Route path="/" element={<InstituteHome instituteData={instituteData} stats={stats} />} />
-          <Route path="/profile" element={<InstituteProfile refreshData={refreshData} />} />
-          <Route path="/faculties" element={<ManageFaculties />} />
-          <Route path="/courses" element={<ManageCourses />} />
-          <Route path="/applications" element={<ViewApplications refreshStats={loadStats} />} />
-          <Route path="/admissions" element={<PublishAdmissions />} />
-        </Routes>
-      </div>
-    </div>
-  );
-};
-
-// Home Component
-const InstituteHome = ({ instituteData, stats }) => {
-  return (
-    <div style={styles.homeContainer}>
-      <h1 style={styles.welcomeTitle}>
-        Welcome back! 
-      </h1>
-      <p style={styles.welcomeSubtitle}>
-        {instituteData?.name || 'Complete your profile to get started'}
-      </p>
-
-      <div style={styles.statsGrid}>
-        <div style={styles.statCard}>
-          <div style={styles.statIcon}></div>
-          <div>
-            <h3 style={styles.statNumber}>{stats.totalFaculties}</h3>
-            <p style={styles.statLabel}>Faculties</p>
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              style={{
+                ...styles.mobileMenuButton,
+                ...(hoverStates.mobileMenuButton && styles.mobileMenuButtonHover)
+              }}
+              onMouseEnter={() => handleMouseEnter('mobileMenuButton', 'mobileMenuButton')}
+              onMouseLeave={() => handleMouseLeave('mobileMenuButton', 'mobileMenuButton')}
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
           </div>
         </div>
+      </nav>
 
-        <div style={styles.statCard}>
-          <div style={styles.statIcon}></div>
-          <div>
-            <h3 style={styles.statNumber}>{stats.totalCourses}</h3>
-            <p style={styles.statLabel}>Courses</p>
+      {/* Mobile Menu */}
+      {isMobileMenuOpen && (
+        <div style={styles.mobileMenu}>
+          <div style={styles.mobileMenuContent}>
+            {navigation.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    setActivePage(item.id);
+                    setIsMobileMenuOpen(false);
+                  }}
+                  style={{
+                    ...styles.navButton,
+                    ...(activePage === item.id ? styles.navButtonActive : styles.navButtonInactive),
+                    ...(hoverStates.navButtons[item.id] && (activePage === item.id ? styles.navButtonActiveHover : styles.navButtonHover))
+                  }}
+                  onMouseEnter={() => handleMouseEnter(item.id, 'navButtons')}
+                  onMouseLeave={() => handleMouseLeave(item.id, 'navButtons')}
+                >
+                  <Icon size={20} />
+                  <span style={{ fontWeight: 500 }}>{item.label}</span>
+                  {item.badge > 0 && (
+                    <span style={{
+                      marginLeft: 'auto',
+                      padding: '0.25rem 0.5rem',
+                      backgroundColor: '#ef4444',
+                      color: 'white',
+                      fontSize: '0.75rem',
+                      borderRadius: '9999px',
+                      fontWeight: 'bold'
+                    }}>
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
-        </div>
-
-        <div style={styles.statCard}>
-          <div style={styles.statIcon}></div>
-          <div>
-            <h3 style={styles.statNumber}>{stats.totalApplications}</h3>
-            <p style={styles.statLabel}>Total Applications</p>
-          </div>
-        </div>
-
-        <div style={styles.statCard}>
-          <div style={styles.statIcon}></div>
-          <div>
-            <h3 style={styles.statNumber}>{stats.pendingApplications}</h3>
-            <p style={styles.statLabel}>Pending Review</p>
-          </div>
-        </div>
-      </div>
-
-      {!instituteData?.name && (
-        <div style={styles.alertCard}>
-          <h3 style={styles.alertTitle}> Complete Your Profile</h3>
-          <p style={styles.alertText}>
-            Please complete your institution profile to start managing courses and applications.
-          </p>
-          <Link to="/institute/profile" style={styles.alertButton}>
-            Complete Profile Now
-          </Link>
         </div>
       )}
 
-      <div style={styles.quickLinks}>
+      <div style={{ display: 'flex', maxWidth: '80rem', margin: '0 auto' }}>
+        {/* Sidebar - Desktop */}
+        <aside style={styles.sidebar}>
+          <nav style={styles.sidebarNav}>
+            {navigation.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActivePage(item.id)}
+                  style={{
+                    ...styles.navButton,
+                    ...(activePage === item.id ? styles.navButtonActive : styles.navButtonInactive),
+                    ...(hoverStates.navButtons[item.id] && (activePage === item.id ? styles.navButtonActiveHover : styles.navButtonHover))
+                  }}
+                  onMouseEnter={() => handleMouseEnter(item.id, 'navButtons')}
+                  onMouseLeave={() => handleMouseLeave(item.id, 'navButtons')}
+                >
+                  <Icon size={20} />
+                  <span style={{ fontWeight: 500, flex: 1, textAlign: 'left' }}>{item.label}</span>
+                  {item.badge > 0 && (
+                    <span style={{
+                      padding: '0.25rem 0.5rem',
+                      backgroundColor: '#ef4444',
+                      color: 'white',
+                      fontSize: '0.75rem',
+                      borderRadius: '9999px',
+                      fontWeight: 'bold'
+                    }}>
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </aside>
+
+        {/* Main Content */}
+        <main style={styles.mainContent}>
+          {renderContent()}
+        </main>
+      </div>
+
+      <style>{`
+        ${styles.mediaQueries.md} {
+          .desktop-nav { display: flex !important; }
+          .sidebar { display: block !important; }
+          .mobile-menu-button { display: none !important; }
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+const HomePage = ({ instituteData, stats, setActivePage }) => {
+  const styles = {
+    container: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '2rem',
+      animation: 'fadeIn 0.5s ease-out'
+    },
+    welcomeSection: {
+      position: 'relative',
+      overflow: 'hidden',
+      background: 'linear-gradient(to right, #f97316, #ec4899)',
+      borderRadius: '1rem',
+      padding: '2rem',
+      color: 'white',
+      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+    },
+    welcomeBlob1: {
+      position: 'absolute',
+      top: 0,
+      right: 0,
+      width: '16rem',
+      height: '16rem',
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      borderRadius: '50%',
+      marginRight: '-8rem',
+      marginTop: '-8rem'
+    },
+    welcomeBlob2: {
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      width: '12rem',
+      height: '12rem',
+      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+      borderRadius: '50%',
+      marginLeft: '-6rem',
+      marginBottom: '-6rem'
+    },
+    welcomeContent: {
+      position: 'relative'
+    },
+    welcomeTitle: {
+      fontSize: '2.25rem',
+      fontWeight: 'bold',
+      marginBottom: '0.5rem'
+    },
+    welcomeSubtitle: {
+      color: 'rgba(255, 255, 255, 0.9)',
+      fontSize: '1.125rem'
+    },
+    statsGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+      gap: '1.5rem'
+    },
+    statCard: {
+      backgroundColor: 'white',
+      borderRadius: '1rem',
+      padding: '1.5rem',
+      border: '1px solid #fed7aa',
+      transition: 'all 0.3s ease',
+      cursor: 'pointer'
+    },
+    statCardHover: {
+      transform: 'translateY(-0.25rem)',
+      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+    },
+    statHeader: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: '1rem'
+    },
+    statIcon: {
+      width: '3rem',
+      height: '3rem',
+      borderRadius: '0.75rem',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    statNumber: {
+      fontSize: '1.875rem',
+      fontWeight: 'bold',
+      color: '#1f2937'
+    },
+    statLabel: {
+      color: '#4b5563',
+      fontWeight: 500
+    },
+    statTrend: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.25rem',
+      fontSize: '0.875rem',
+      marginTop: '0.5rem'
+    },
+    alertCard: {
+      background: 'linear-gradient(to right, #fffbeb, #fed7aa)',
+      border: '2px solid #fdba74',
+      borderRadius: '1rem',
+      padding: '1.5rem',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+    },
+    alertContent: {
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: '1rem'
+    },
+    alertIcon: {
+      width: '3rem',
+      height: '3rem',
+      backgroundColor: '#f97316',
+      borderRadius: '0.75rem',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      flexShrink: 0
+    },
+    alertTitle: {
+      fontSize: '1.25rem',
+      fontWeight: 'bold',
+      color: '#7c2d12',
+      marginBottom: '0.5rem'
+    },
+    alertText: {
+      color: '#92400e',
+      marginBottom: '1rem'
+    },
+    alertButton: {
+      padding: '0.75rem 1.5rem',
+      background: 'linear-gradient(to right, #f97316, #ec4899)',
+      color: 'white',
+      fontWeight: 600,
+      borderRadius: '0.75rem',
+      border: 'none',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)'
+    },
+    alertButtonHover: {
+      transform: 'scale(1.05)',
+      boxShadow: '0 6px 20px rgba(249, 115, 22, 0.4)'
+    },
+    quickActions: {
+      marginTop: '2rem'
+    },
+    sectionTitle: {
+      fontSize: '1.5rem',
+      fontWeight: 'bold',
+      color: '#1f2937',
+      marginBottom: '1.5rem'
+    },
+    quickActionsGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+      gap: '1.5rem'
+    },
+    quickActionCard: {
+      backgroundColor: 'white',
+      borderRadius: '1rem',
+      padding: '2rem',
+      border: '1px solid #fed7aa',
+      transition: 'all 0.3s ease',
+      cursor: 'pointer',
+      textAlign: 'left'
+    },
+    quickActionCardHover: {
+      transform: 'translateY(-0.5rem)',
+      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+    },
+    quickActionIcon: {
+      width: '4rem',
+      height: '4rem',
+      borderRadius: '1rem',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      marginBottom: '1rem',
+      transition: 'transform 0.3s ease'
+    },
+    quickActionIconHover: {
+      transform: 'scale(1.1)'
+    },
+    quickActionTitle: {
+      fontSize: '1.25rem',
+      fontWeight: 'bold',
+      color: '#1f2937',
+      marginBottom: '0.5rem'
+    },
+    quickActionText: {
+      color: '#6b7280'
+    }
+  };
+
+  const [hoverStates, setHoverStates] = useState({
+    statCards: {},
+    alertButton: false,
+    quickActionCards: {},
+    quickActionIcons: {}
+  });
+
+  const handleMouseEnter = (item, type) => {
+    setHoverStates(prev => ({
+      ...prev,
+      [type]: { ...prev[type], [item]: true }
+    }));
+  };
+
+  const handleMouseLeave = (item, type) => {
+    setHoverStates(prev => ({
+      ...prev,
+      [type]: { ...prev[type], [item]: false }
+    }));
+  };
+
+  const statCards = [
+    { 
+      key: 'faculties', 
+      number: stats.totalFaculties, 
+      label: 'Faculties', 
+      icon: Users, 
+      iconColor: 'white',
+      gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+      trend: { color: '#16a34a', text: 'Active' }
+    },
+    { 
+      key: 'courses', 
+      number: stats.totalCourses, 
+      label: 'Courses', 
+      icon: BookOpen, 
+      iconColor: 'white',
+      gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+      trend: { color: '#16a34a', text: 'Published' }
+    },
+    { 
+      key: 'applications', 
+      number: stats.totalApplications, 
+      label: 'Total Applications', 
+      icon: FileCheck, 
+      iconColor: 'white',
+      gradient: 'linear-gradient(135deg, #10b981, #059669)',
+      trend: { color: '#2563eb', text: 'All time' }
+    },
+    { 
+      key: 'pending', 
+      number: stats.pendingApplications, 
+      label: 'Pending Review', 
+      icon: AlertCircle, 
+      iconColor: 'white',
+      gradient: 'linear-gradient(135deg, #f97316, #ec4899)',
+      trend: { color: '#ea580c', text: 'Action needed' }
+    }
+  ];
+
+  const quickActions = [
+    {
+      key: 'courses',
+      title: 'Add New Course',
+      text: 'Create a new course offering for students',
+      icon: BookOpen,
+      gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+      onClick: () => setActivePage('courses')
+    },
+    {
+      key: 'applications',
+      title: 'Review Applications',
+      text: 'Process and review student applications',
+      icon: FileCheck,
+      gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+      onClick: () => setActivePage('applications')
+    },
+    {
+      key: 'admissions',
+      title: 'Publish Admissions',
+      text: 'Announce admission results to students',
+      icon: Calendar,
+      gradient: 'linear-gradient(135deg, #f97316, #ec4899)',
+      onClick: () => setActivePage('admissions')
+    }
+  ];
+
+  return (
+    <div style={styles.container}>
+      {/* Welcome Section */}
+      <div style={styles.welcomeSection}>
+        <div style={styles.welcomeBlob1}></div>
+        <div style={styles.welcomeBlob2}></div>
+        <div style={styles.welcomeContent}>
+          <h1 style={styles.welcomeTitle}>Welcome back! 🎓</h1>
+          <p style={styles.welcomeSubtitle}>{instituteData.name}</p>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div style={styles.statsGrid}>
+        {statCards.map((stat) => {
+          const Icon = stat.icon;
+          return (
+            <div
+              key={stat.key}
+              style={{
+                ...styles.statCard,
+                ...(hoverStates.statCards[stat.key] && styles.statCardHover)
+              }}
+              onMouseEnter={() => handleMouseEnter(stat.key, 'statCards')}
+              onMouseLeave={() => handleMouseLeave(stat.key, 'statCards')}
+            >
+              <div style={styles.statHeader}>
+                <div style={{ ...styles.statIcon, background: stat.gradient }}>
+                  <Icon size={24} color={stat.iconColor} />
+                </div>
+                <span style={styles.statNumber}>{stat.number}</span>
+              </div>
+              <p style={styles.statLabel}>{stat.label}</p>
+              <div style={{ ...styles.statTrend, color: stat.trend.color }}>
+                <TrendingUp size={16} />
+                <span>{stat.trend.text}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Alert Cards */}
+      {!instituteData.name && (
+        <div style={styles.alertCard}>
+          <div style={styles.alertContent}>
+            <div style={styles.alertIcon}>
+              <Bell size={24} color="white" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h3 style={styles.alertTitle}>Complete Your Profile</h3>
+              <p style={styles.alertText}>
+                Please complete your institution profile to start managing courses and applications.
+              </p>
+              <button
+                onClick={() => setActivePage('profile')}
+                style={{
+                  ...styles.alertButton,
+                  ...(hoverStates.alertButton && styles.alertButtonHover)
+                }}
+                onMouseEnter={() => handleMouseEnter('alertButton', 'alertButton')}
+                onMouseLeave={() => handleMouseLeave('alertButton', 'alertButton')}
+              >
+                Complete Profile Now →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {stats.pendingApplications > 0 && (
+        <div style={{ ...styles.alertCard, background: 'linear-gradient(to right, #fef2f2, #fecaca)', borderColor: '#fca5a5' }}>
+          <div style={styles.alertContent}>
+            <div style={{ ...styles.alertIcon, backgroundColor: '#ef4444' }}>
+              <AlertCircle size={24} color="white" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ ...styles.alertTitle, color: '#7f1d1d' }}>Pending Applications</h3>
+              <p style={{ ...styles.alertText, color: '#991b1b' }}>
+                You have {stats.pendingApplications} student applications waiting for your review.
+              </p>
+              <button
+                onClick={() => setActivePage('applications')}
+                style={{
+                  ...styles.alertButton,
+                  background: 'linear-gradient(to right, #ef4444, #ec4899)',
+                  ...(hoverStates.alertButton && styles.alertButtonHover)
+                }}
+                onMouseEnter={() => handleMouseEnter('alertButton', 'alertButton')}
+                onMouseLeave={() => handleMouseLeave('alertButton', 'alertButton')}
+              >
+                Review Applications →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Actions */}
+      <div style={styles.quickActions}>
         <h2 style={styles.sectionTitle}>Quick Actions</h2>
-        <div style={styles.quickLinksGrid}>
-          <Link to="/institute/courses" style={styles.quickLinkCard}>
-            <span style={styles.quickLinkIcon}></span>
-            <h3 style={styles.quickLinkTitle}>Add New Course</h3>
-            <p style={styles.quickLinkText}>Create a new course offering</p>
-          </Link>
-
-          <Link to="/institute/applications" style={styles.quickLinkCard}>
-            <span style={styles.quickLinkIcon}></span>
-            <h3 style={styles.quickLinkTitle}>Review Applications</h3>
-            <p style={styles.quickLinkText}>Process student applications</p>
-          </Link>
-
-          <Link to="/institute/admissions" style={styles.quickLinkCard}>
-            <span style={styles.quickLinkIcon}></span>
-            <h3 style={styles.quickLinkTitle}>Publish Admissions</h3>
-            <p style={styles.quickLinkText}>Announce admission results</p>
-          </Link>
+        <div style={styles.quickActionsGrid}>
+          {quickActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <button
+                key={action.key}
+                onClick={action.onClick}
+                style={{
+                  ...styles.quickActionCard,
+                  ...(hoverStates.quickActionCards[action.key] && styles.quickActionCardHover)
+                }}
+                onMouseEnter={() => handleMouseEnter(action.key, 'quickActionCards')}
+                onMouseLeave={() => handleMouseLeave(action.key, 'quickActionCards')}
+              >
+                <div
+                  style={{
+                    ...styles.quickActionIcon,
+                    background: action.gradient,
+                    ...(hoverStates.quickActionIcons[action.key] && styles.quickActionIconHover)
+                  }}
+                  onMouseEnter={() => handleMouseEnter(action.key, 'quickActionIcons')}
+                  onMouseLeave={() => handleMouseLeave(action.key, 'quickActionIcons')}
+                >
+                  <Icon size={32} color="white" />
+                </div>
+                <h3 style={styles.quickActionTitle}>{action.title}</h3>
+                <p style={styles.quickActionText}>{action.text}</p>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
   );
 };
 
-const styles = {
-  container: {
-    display: 'flex',
-    height: '100vh',
-    backgroundColor: '#f5f7fa'
-  },
-  sidebar: {
-    width: '280px',
-    backgroundColor: '#34495e',
-    color: 'white',
-    display: 'flex',
-    flexDirection: 'column',
-    boxShadow: '2px 0 10px rgba(0,0,0,0.1)'
-  },
-  logo: {
-    padding: '30px 20px',
-    borderBottom: '1px solid rgba(255,255,255,0.1)'
-  },
-  logoText: {
-    margin: 0,
-    fontSize: '24px',
-    fontWeight: 'bold'
-  },
-  logoSubtext: {
-    margin: '5px 0 0 0',
-    fontSize: '14px',
-    opacity: 0.7
-  },
-  nav: {
-    flex: 1,
-    padding: '20px 0',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '5px'
-  },
-  navItem: {
-    display: 'flex',
-    alignItems: 'center',
-    padding: '15px 20px',
-    color: 'white',
-    textDecoration: 'none',
-    transition: 'all 0.3s',
-    fontSize: '15px',
-    position: 'relative'
-  },
-  navIcon: {
-    marginRight: '15px',
-    fontSize: '20px'
-  },
-  badge: {
-    marginLeft: 'auto',
-    backgroundColor: '#e74c3c',
-    padding: '3px 8px',
-    borderRadius: '12px',
-    fontSize: '12px',
-    fontWeight: 'bold'
-  },
-  sidebarFooter: {
-    padding: '20px',
-    borderTop: '1px solid rgba(255,255,255,0.1)'
-  },
-  userInfo: {
-    marginBottom: '15px'
-  },
-  userName: {
-    margin: 0,
-    fontSize: '14px',
-    fontWeight: '600'
-  },
-  userRole: {
-    margin: '5px 0 0 0',
-    fontSize: '12px',
-    opacity: 0.7
-  },
-  logoutBtn: {
-    width: '100%',
-    padding: '12px',
-    backgroundColor: '#e74c3c',
-    color: 'white',
-    border: 'none',
-    borderRadius: '6px',
-    cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: '600'
-  },
-  mainContent: {
-    flex: 1,
-    overflow: 'auto',
-    padding: '30px'
-  },
-  homeContainer: {
-    maxWidth: '1200px'
-  },
-  welcomeTitle: {
-    fontSize: '36px',
-    margin: '0 0 10px 0',
-    color: '#2c3e50'
-  },
-  welcomeSubtitle: {
-    fontSize: '18px',
-    color: '#7f8c8d',
-    marginBottom: '30px'
-  },
-  statsGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: '20px',
-    marginBottom: '30px'
-  },
-  statCard: {
+// Placeholder components for other pages
+const ProfilePage = () => (
+  <div style={{
     backgroundColor: 'white',
-    padding: '25px',
-    borderRadius: '12px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '20px'
-  },
-  statIcon: {
-    fontSize: '40px'
-  },
-  statNumber: {
-    fontSize: '32px',
-    margin: '0 0 5px 0',
-    color: '#2c3e50',
-    fontWeight: 'bold'
-  },
-  statLabel: {
-    margin: 0,
-    color: '#7f8c8d',
-    fontSize: '14px'
-  },
-  alertCard: {
-    backgroundColor: '#fff3cd',
-    padding: '25px',
-    borderRadius: '12px',
-    marginBottom: '30px',
-    border: '1px solid #ffc107'
-  },
-  alertTitle: {
-    margin: '0 0 10px 0',
-    color: '#856404'
-  },
-  alertText: {
-    margin: '0 0 15px 0',
-    color: '#856404'
-  },
-  alertButton: {
-    display: 'inline-block',
-    padding: '10px 20px',
-    backgroundColor: '#ffc107',
-    color: '#856404',
-    textDecoration: 'none',
-    borderRadius: '6px',
-    fontWeight: '600'
-  },
-  quickLinks: {
-    marginTop: '30px'
-  },
-  sectionTitle: {
-    fontSize: '24px',
-    marginBottom: '20px',
-    color: '#2c3e50'
-  },
-  quickLinksGrid: {
-    display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-    gap: '20px'
-  },
-  quickLinkCard: {
+    borderRadius: '1rem',
+    padding: '2rem',
+    border: '1px solid #fed7aa',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+  }}>
+    <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1.5rem' }}>
+      Institution Profile
+    </h2>
+    <p style={{ color: '#6b7280' }}>Profile management interface would go here...</p>
+  </div>
+);
+
+const FacultiesPage = () => (
+  <div style={{
     backgroundColor: 'white',
-    padding: '30px',
-    borderRadius: '12px',
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-    textDecoration: 'none',
-    transition: 'transform 0.3s'
-  },
-  quickLinkIcon: {
-    fontSize: '48px',
-    display: 'block',
-    marginBottom: '15px'
-  },
-  quickLinkTitle: {
-    margin: '0 0 10px 0',
-    color: '#2c3e50',
-    fontSize: '20px'
-  },
-  quickLinkText: {
-    margin: 0,
-    color: '#7f8c8d',
-    fontSize: '14px'
-  }
-};
+    borderRadius: '1rem',
+    padding: '2rem',
+    border: '1px solid #fed7aa',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+  }}>
+    <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1.5rem' }}>
+      Manage Faculties
+    </h2>
+    <p style={{ color: '#6b7280' }}>Faculty management interface would go here...</p>
+  </div>
+);
+
+const CoursesPage = () => (
+  <div style={{
+    backgroundColor: 'white',
+    borderRadius: '1rem',
+    padding: '2rem',
+    border: '1px solid #fed7aa',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+  }}>
+    <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1.5rem' }}>
+      Manage Courses
+    </h2>
+    <p style={{ color: '#6b7280' }}>Course management interface would go here...</p>
+  </div>
+);
+
+const ApplicationsPage = ({ stats }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '1rem',
+      padding: '2rem',
+      border: '1px solid #fed7aa',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+        <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937' }}>
+          Student Applications
+        </h2>
+        <span style={{
+          padding: '0.5rem 1rem',
+          backgroundColor: '#fef2f2',
+          color: '#dc2626',
+          borderRadius: '9999px',
+          fontWeight: 600
+        }}>
+          {stats.pendingApplications} Pending
+        </span>
+      </div>
+      <p style={{ color: '#6b7280' }}>Applications review interface would go here...</p>
+    </div>
+  </div>
+);
+
+const AdmissionsPage = () => (
+  <div style={{
+    backgroundColor: 'white',
+    borderRadius: '1rem',
+    padding: '2rem',
+    border: '1px solid #fed7aa',
+    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+  }}>
+    <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1.5rem' }}>
+      Publish Admissions
+    </h2>
+    <p style={{ color: '#6b7280' }}>Admissions publishing interface would go here...</p>
+  </div>
+);
 
 export default InstituteDashboard;
