@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import logo from './logo.png';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -305,20 +306,20 @@ const Login = () => {
             {/* Header */}
             <div style={styles.header}>
               <div 
-                style={{
-                  ...styles.iconContainer,
-                  transform: isHovering ? 'rotate(3deg)' : 'rotate(0deg)'
-                }}
+                
               >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
+                <img 
+                  src={logo}
+                  alt="logo" 
+                  width="50" 
+                  height="75"
+                />
               </div>
               <h1 style={styles.title}>
                 Welcome Back
               </h1>
               <p style={styles.subtitle}>
-                Career Guidance Platform
+                Thuto Pele Career Connect
               </p>
             </div>
 

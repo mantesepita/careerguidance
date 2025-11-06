@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { LogOut, Menu, X, ArrowRight, Sparkles, Target, TrendingUp, Users, Briefcase, GraduationCap, Heart, Newspaper, DollarSign, Building2, ChevronRight, Calendar, MapPin, Clock } from 'lucide-react';
 import './Home.css';
+import logo from './logo.png';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -67,7 +68,7 @@ const Home = () => {
         location: 'Maseru',
         excerpt: 'Recent symposium explores digital regulation and tech-driven future for Lesotho\'s business landscape.',
         tag: 'Technology',
-        image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80'
+        image: 'https://media.licdn.com/dms/image/v2/D4D22AQHHgRpWIL0UCw/feedshare-shrink_2048_1536/B4DZo2qudUIMAw-/0/1761853765050?e=1764201600&v=beta&t=uDed3xADmsuRJP2MOPgA0nKNyOghzQlG5ucFB-UADQI'
       },
       {
         title: 'China Donates Agricultural Equipment to Boost Food Security',
@@ -76,7 +77,7 @@ const Home = () => {
         location: 'National',
         excerpt: 'Tractors, harvesters, and modern farming tools received to enhance mechanization and reduce import reliance.',
         tag: 'Agriculture',
-        image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=800&q=80'
+        image: 'https://www.thereporter.co.ls/wp-content/uploads/2025/11/WhatsApp-Image-2025-11-01-at-13.10.34.jpeg'
       },
       {
         title: 'BEDCO Launches Partnership with RSL and Standard Bank',
@@ -85,7 +86,7 @@ const Home = () => {
         location: 'Maseru',
         excerpt: 'New initiative aims to support SME development and strengthen local entrepreneurship ecosystem.',
         tag: 'SMEs',
-        image: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?w=800&q=80'
+        image: 'https://lesotho.co.ls/wp-content/uploads/2025/06/498199856_685108344130164_8608115310218343840_n.jpg'
       },
       {
         title: 'CBL Wins 2025 Corporate Ethical Procurement Award',
@@ -94,7 +95,7 @@ const Home = () => {
         location: 'Maseru',
         excerpt: 'Central Bank of Lesotho recognized by Chartered Institute for excellence in procurement practices.',
         tag: 'Finance',
-        image: 'https://images.unsplash.com/photo-1541354329998-f4d9a9f9297f?w=800&q=80'
+        image: 'https://lesotho.co.ls/wp-content/uploads/2025/08/534642658_1330142072453780_828996383979864784_n.jpg'
       }
     ],
     health: [
@@ -105,7 +106,7 @@ const Home = () => {
         location: 'Maseru',
         excerpt: 'New strategy leverages remote monitoring and big data analytics to transform healthcare delivery nationwide.',
         tag: 'Digital Health',
-        image: 'https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&q=80'
+        image: 'https://www.afro.who.int/sites/default/files/2024-12/339A7389.jpg'
       },
       {
         title: 'Health Workforce Density to Improve 27% by 2025',
@@ -114,7 +115,7 @@ const Home = () => {
         location: 'National',
         excerpt: 'Doctors, nurses and midwives per 10,000 population projected to reach 26.73, representing significant progress.',
         tag: 'Healthcare',
-        image: 'https://images.unsplash.com/photo-1631815588090-d4bfec5b1ccb?w=800&q=80'
+        image: 'https://www.pih.org/sites/default/files/inline-images/Lesotho_0218_Botha-BotheMP_CAvila_050-web.jpg'
       },
       {
         title: 'TB Treatment Program Expands Community Outreach',
@@ -123,7 +124,7 @@ const Home = () => {
         location: 'Botšabelo',
         excerpt: 'MDR-TB and XDR-TB care now available with targeted education in schools and vulnerable sectors.',
         tag: 'Public Health',
-        image: 'https://images.unsplash.com/photo-1584515933487-779824d29309?w=800&q=80'
+        image: 'https://www.pih.org/sites/default/files/2025-02/Lesotho_20240420_TBHunterNkau_NChandrasekar_152.jpg'
       },
       {
         title: 'Chinese Medical Team Provides Free Services',
@@ -132,7 +133,7 @@ const Home = () => {
         location: 'National',
         excerpt: 'Landmark humanitarian effort brings free medical services to communities across Lesotho.',
         tag: 'Healthcare Access',
-        image: 'https://images.unsplash.com/photo-1551601651-05686bc1b4ab?w=800&q=80'
+        image: 'https://nul.ls/wp-content/uploads/2025/07/MG_0532-copy-scaled.jpg'
       }
     ],
     education: [
@@ -143,7 +144,7 @@ const Home = () => {
         location: 'Maseru',
         excerpt: 'Participants to receive training on business plan development and pitching skills for 2025 initiatives.',
         tag: 'Entrepreneurship',
-        image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&q=80'
+        image: 'https://lesotho.co.ls/wp-content/uploads/2025/09/545184082_1322917046510636_5282686795033644541_n-780x470.jpg'
       },
       {
         title: 'Ministry Implements New Curriculum with Teacher Training',
@@ -152,7 +153,7 @@ const Home = () => {
         location: 'All Districts',
         excerpt: 'Grade 8 teachers across all districts receive training in Scientific and Technological subjects for 2025.',
         tag: 'Curriculum',
-        image: 'https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=800&q=80'
+        image: 'https://worldbank.scene7.com/is/image/worldbankprod/le-Lesotho-teacher-training?wid=780&hei=439&qlt=85,0&resMode=sharp'
       },
       {
         title: 'NUL Undergraduate Admissions 2024-2025 Open',
@@ -161,7 +162,7 @@ const Home = () => {
         location: 'Roma',
         excerpt: 'National University of Lesotho begins online admissions process for undergraduate programs.',
         tag: 'Higher Education',
-        image: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&q=80'
+        image: 'https://africanuniversities.org/wp-content/uploads/2023/06/National-University-of-Lesotho-Lesotho.png'
       },
       {
         title: 'Education Project Reduces Junior Secondary Dropout Rates',
@@ -170,7 +171,7 @@ const Home = () => {
         location: 'National',
         excerpt: 'Dropout rates fall from 27% to 19.8%, with female rates at just 5.2% - exceeding project targets.',
         tag: 'Education Success',
-        image: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80'
+        image: 'https://pbs.twimg.com/media/Gak-m-DWMAAdMgb?format=jpg&name=4096x4096'
       }
     ],
     corporate: [
@@ -181,7 +182,7 @@ const Home = () => {
         location: 'National',
         excerpt: 'Experts call for economic diversification beyond textiles and subsistence agriculture for sustainable growth.',
         tag: 'Economy',
-        image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&q=80'
+        image: 'https://mg.co.za/wp-content/uploads/2025/07/maseru_extra_large.jpeg'
       },
       {
         title: 'Youth Unemployment Declared State of Emergency',
@@ -190,7 +191,7 @@ const Home = () => {
         location: 'National',
         excerpt: 'Government addresses deepening crisis as graduates face challenges between qualifications and opportunities.',
         tag: 'Employment',
-        image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=800&q=80'
+        image: 'https://apanews.net/wp-content/uploads/2025/02/Unemployment-1-1024x430.jpeg'
       },
       {
         title: 'NSDP II Extended to 2028 with Focus on Private Sector',
@@ -199,7 +200,7 @@ const Home = () => {
         location: 'Maseru',
         excerpt: 'Extended plan prioritizes inclusive growth, job creation, and strengthening human capital development.',
         tag: 'Policy',
-        image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=800&q=80'
+        image: 'https://www.gov.ls/wp-content/uploads/2023/05/PS-TRADE.jpg'
       },
       {
         title: 'Trade Ministry Promotes Export Growth & SME Linkages',
@@ -208,7 +209,7 @@ const Home = () => {
         location: 'Maseru',
         excerpt: 'New initiatives enhance logistics, attract investment, and support partnerships between large firms and local SMEs.',
         tag: 'Trade',
-        image: 'https://images.unsplash.com/photo-1578574577315-3fbeb0cecdc2?w=800&q=80'
+        image: 'https://www.gov.ls/wp-content/uploads/2021/11/Thetsane-Industial-Area.jpg'
       }
     ]
   };
@@ -248,11 +249,16 @@ const Home = () => {
         <div className="nav-container">
           <div className="nav-content">
             <div className="logo">
-              <div className="logo-icon">
-                <Sparkles className="w-5 h-5 text-white" />
+              <div className="logo">
+                <img 
+                  src={logo}
+                  alt="logo" 
+                  width="50" 
+                  height="75"
+                />
               </div>
               <span className="logo-text">
-                CareerSide
+               ThutoPele
               </span>
             </div>
 
@@ -342,7 +348,7 @@ const Home = () => {
           fontSize: '14px',
           color: '#c2410c'
         }}>
-          ✅ You're logged in as: {currentUser.email}
+          You're logged in as: {currentUser.email}
         </div>
       )}
 
@@ -353,14 +359,14 @@ const Home = () => {
           <div className="location-badge">
             <MapPin className="w-4 h-4 text-orange-500" />
             <span className="location-text">
-              Empowering Basotho Professionals
+              Mokorotlo oa thuto le mesebetsi 
             </span>
           </div>
 
           <h1 className="hero-title">
             Welcome to{' '}
             <span className="gradient-text">
-              CareerSide
+              ThutoPele
             </span>
           </h1>
 
@@ -560,15 +566,20 @@ const Home = () => {
           <div className="footer-grid">
             <div>
               <div className="footer-logo">
-                <div className="logo-icon">
-                  <Sparkles className="w-5 h-5 text-white" />
+                <div className="logo">
+                  <img 
+                  src={logo}
+                  alt="logo" 
+                  width="50" 
+                  height="75"
+                />
                 </div>
                 <span className="logo-text">
-                  CareerSide
+                  ThutoPele
                 </span>
               </div>
               <p className="footer-description">
-                Empowering Basotho professionals to reach their full potential.
+                Mokorotlo oa thuto le mesebetsi 
               </p>
             </div>
             
@@ -605,7 +616,7 @@ const Home = () => {
           </div>
           
           <div className="footer-copyright">
-            © 2025 CareerSide. Empowering careers across Lesotho, one step at a time.
+            © 2025 ThutoPele. Empowering careers across Lesotho, one step at a time.
           </div>
         </div>
       </footer>

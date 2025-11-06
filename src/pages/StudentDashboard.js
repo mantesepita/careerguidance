@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getDocument } from '../firebase/helpers';
+import logo from './logo.png';
 
 const StudentDashboard = () => {
   const { currentUser, userData, logout } = useAuth();
@@ -399,8 +400,15 @@ const StudentDashboard = () => {
       <div style={styles.sidebar}>
         <div style={styles.sidebarOverlay}></div>
         <div style={styles.sidebarContent}>
-          <div style={styles.logo}>
-            <h2 style={styles.logoText}>CareerSide</h2>
+         <div style={styles.logo}> <div> 
+              <img 
+                src={logo}
+                alt="logo" 
+                width="50" 
+                height="75"
+              />
+            </div>
+            <h2 style={styles.logoText}>ThutoPele</h2>
             <p style={styles.logoSubtext}>Student Dashboard</p>
           </div>
 
@@ -417,7 +425,7 @@ const StudentDashboard = () => {
                 onMouseEnter={() => handleMouseEnter(tab, 'navItems')}
                 onMouseLeave={() => handleMouseLeave(tab, 'navItems')}
               >
-                <span style={styles.navIcon}></span>
+                
                 <span>
                   {tab === 'home' && 'Home'}
                   {tab === 'profile' && 'My Profile'}
@@ -497,10 +505,10 @@ const StudentHome = ({ studentData, styles, hoverStates, setHoverStates }) => {
   ];
 
   const stats = [
-    { key: 'applications', number: '0', label: 'Active Applications', icon: '📝' },
-    { key: 'admitted', number: '0', label: 'Admitted', icon: '✅' },
-    { key: 'jobs', number: '0', label: 'Job Applications', icon: '💼' },
-    { key: 'profile', number: studentData?.profileCompleted ? '100%' : '20%', label: 'Profile Complete', icon: '📊' }
+    { key: 'applications', number: '0', label: 'Active Applications'},
+    { key: 'admitted', number: '0', label: 'Admitted' },
+    { key: 'jobs', number: '0', label: 'Job Applications'},
+    { key: 'profile', number: studentData?.profileCompleted ? '100%' : '20%', label: 'Profile Complete' }
   ];
 
   return (
@@ -523,9 +531,7 @@ const StudentHome = ({ studentData, styles, hoverStates, setHoverStates }) => {
             onMouseEnter={() => handleMouseEnter(stat.key, 'statCards')}
             onMouseLeave={() => handleMouseLeave(stat.key, 'statCards')}
           >
-            <div style={styles.statIcon}>
-              {stat.icon}
-            </div>
+           
             <div>
               <h3 style={styles.statNumber}>{stat.number}</h3>
               <p style={styles.statLabel}>{stat.label}</p>
@@ -572,7 +578,7 @@ const StudentHome = ({ studentData, styles, hoverStates, setHoverStates }) => {
                 ...styles.quickLinkCardOverlay,
                 ...(hoverStates.quickLinks[link.key] && styles.quickLinkCardOverlayHover)
               }}></div>
-              <span style={styles.quickLinkIcon}>→</span>
+              
               <h3 style={styles.quickLinkTitle}>{link.title}</h3>
               <p style={styles.quickLinkText}>{link.text}</p>
             </Link>
