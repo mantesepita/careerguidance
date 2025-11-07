@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Home, Building2, Briefcase, Users, Send, LogOut, Menu, X, Bell, Plus, TrendingUp } from 'lucide-react';
+import { Home, Building2, Briefcase, Users, Send, LogOut, Menu, X, Bell, Plus, TrendingUp, Mail, Calendar, FileText, CheckCircle, XCircle,MapPin } from 'lucide-react';
+import logo from './logo.png';
+import Footer from './Footer';
 
 const CompanyDashboard = () => {
   const [activePage, setActivePage] = useState('home');
@@ -269,8 +271,13 @@ const CompanyDashboard = () => {
           <div style={styles.navContent}>
             {/* Logo */}
             <div style={styles.logo}>
-              <div style={styles.logoIcon}>
-                <Building2 size={24} color="white" />
+              <div >
+                <img 
+                  src={logo}
+                  alt="logo" 
+                  width="50" 
+                  height="75"
+                />
               </div>
               <div>
                 <h1 style={styles.logoText}>Company Panel</h1>
@@ -281,6 +288,7 @@ const CompanyDashboard = () => {
             {/* Desktop Navigation */}
             <div style={styles.desktopNav}>
               <button 
+                onClick={() => setActivePage('postJob')}
                 style={{
                   ...styles.postJobButton,
                   ...(hoverStates.postJobButton && styles.postJobButtonHover)
@@ -638,7 +646,7 @@ const HomePage = ({ companyData, stats, setActivePage }) => {
       label: 'Active Job Posts', 
       icon: Briefcase, 
       iconColor: 'white',
-      gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+      gradient: 'linear-gradient(135deg, #f97316, #ec4899)',
       trend: { color: '#16a34a', text: '+2 this week' }
     },
     { 
@@ -647,7 +655,7 @@ const HomePage = ({ companyData, stats, setActivePage }) => {
       label: 'Total Applicants', 
       icon: Users, 
       iconColor: 'white',
-      gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+      gradient: 'linear-gradient(135deg, #f97316, #ec4899)',
       trend: { color: '#2563eb', text: '+15 this week' }
     },
     { 
@@ -656,7 +664,7 @@ const HomePage = ({ companyData, stats, setActivePage }) => {
       label: 'Shortlisted', 
       icon: Users, 
       iconColor: 'white',
-      gradient: 'linear-gradient(135deg, #10b981, #059669)',
+      gradient: 'linear-gradient(135deg, #f97316, #ec4899)',
       trend: { color: '#16a34a', text: 'Ready to review' }
     },
     { 
@@ -678,7 +686,7 @@ const HomePage = ({ companyData, stats, setActivePage }) => {
       time: '2 hours ago',
       icon: Users,
       color: '#3b82f6',
-      background: 'linear-gradient(to right, #dbeafe, #dbeafe80)'
+      background: '#f7eae1d4'
     },
     {
       key: 'invitations',
@@ -687,7 +695,7 @@ const HomePage = ({ companyData, stats, setActivePage }) => {
       time: '5 hours ago',
       icon: Send,
       color: '#10b981',
-      background: 'linear-gradient(to right, #dcfce7, #dcfce780)'
+      background: '#f7eae1d4'
     },
     {
       key: 'jobPost',
@@ -696,7 +704,7 @@ const HomePage = ({ companyData, stats, setActivePage }) => {
       time: '1 day ago',
       icon: Briefcase,
       color: '#8b5cf6',
-      background: 'linear-gradient(to right, #f3e8ff, #f3e8ff80)'
+      background: '#f7eae1d4'
     }
   ];
 
@@ -706,7 +714,7 @@ const HomePage = ({ companyData, stats, setActivePage }) => {
       title: 'Post New Job',
       text: 'Create and publish a new job opening',
       icon: Plus,
-      gradient: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+      gradient: 'linear-gradient(135deg, #f97316, #ec4899)',
       onClick: () => setActivePage('postJob')
     },
     {
@@ -714,7 +722,7 @@ const HomePage = ({ companyData, stats, setActivePage }) => {
       title: 'Review Applicants',
       text: 'Browse and review candidate applications',
       icon: Users,
-      gradient: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+      gradient: 'linear-gradient(135deg, #f97316, #ec4899)',
       onClick: () => setActivePage('applicants')
     },
     {
@@ -734,7 +742,7 @@ const HomePage = ({ companyData, stats, setActivePage }) => {
         <div style={styles.welcomeBlob1}></div>
         <div style={styles.welcomeBlob2}></div>
         <div style={styles.welcomeContent}>
-          <h1 style={styles.welcomeTitle}>Welcome back! 💼</h1>
+          <h1 style={styles.welcomeTitle}>Welcome back! </h1>
           <p style={styles.welcomeSubtitle}>{companyData.name}</p>
         </div>
       </div>
@@ -836,78 +844,1097 @@ const HomePage = ({ companyData, stats, setActivePage }) => {
   );
 };
 
-// Placeholder components for other pages
-const ProfilePage = () => (
-  <div style={{
-    backgroundColor: 'white',
-    borderRadius: '1rem',
-    padding: '2rem',
-    border: '1px solid #fed7aa',
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-  }}>
-    <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1.5rem' }}>
-      Company Profile
-    </h2>
-    <p style={{ color: '#6b7280' }}>Profile management interface would go here...</p>
-  </div>
-);
+const ProfilePage = () => {
+  const [formData, setFormData] = useState({
+    name: 'Tech Solutions Inc.',
+    industry: 'Technology',
+    location: 'Maseru, Lesotho',
+    contactEmail: 'hr@techsolutions.com',
+    website: 'www.techsolutions.com',
+    description: 'Leading technology solutions provider in Lesotho, specializing in software development and IT consulting services.'
+  });
+  const [message, setMessage] = useState('');
 
-const PostJobPage = () => (
-  <div style={{
-    backgroundColor: 'white',
-    borderRadius: '1rem',
-    padding: '2rem',
-    border: '1px solid #fed7aa',
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-  }}>
-    <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1.5rem' }}>
-      Post New Job
-    </h2>
-    <p style={{ color: '#6b7280' }}>Job posting form would go here...</p>
-  </div>
-);
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-const ApplicantsPage = ({ stats }) => (
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-    <div style={{
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setMessage('✅ Profile updated successfully!');
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  const styles = {
+    container: {
+      backgroundColor: 'white',
+      borderRadius: '1rem',
+      padding: '2rem',
+      border: '1px solid #fed7aa',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+      animation: 'fadeIn 0.5s ease-out'
+    },
+    title: {
+      fontSize: '1.875rem',
+      fontWeight: 'bold',
+      color: '#1f2937',
+      marginBottom: '1.5rem'
+    },
+    message: {
+      padding: '0.75rem',
+      backgroundColor: '#dcfce7',
+      color: '#16a34a',
+      borderRadius: '0.5rem',
+      marginBottom: '1rem',
+      textAlign: 'center'
+    },
+    form: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '1.5rem'
+    },
+    inputGroup: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.5rem'
+    },
+    label: {
+      fontWeight: '600',
+      color: '#374151',
+      fontSize: '0.875rem'
+    },
+    input: {
+      padding: '0.75rem',
+      borderRadius: '0.5rem',
+      border: '1px solid #d1d5db',
+      fontSize: '1rem',
+      transition: 'all 0.3s ease'
+    },
+    inputFocus: {
+      borderColor: '#f97316',
+      boxShadow: '0 0 0 3px rgba(249, 115, 22, 0.1)'
+    },
+    textarea: {
+      padding: '0.75rem',
+      borderRadius: '0.5rem',
+      border: '1px solid #d1d5db',
+      fontSize: '1rem',
+      minHeight: '120px',
+      resize: 'vertical',
+      transition: 'all 0.3s ease'
+    },
+    button: {
+      padding: '0.75rem 1.5rem',
+      background: 'linear-gradient(to right, #f97316, #ec4899)',
+      color: 'white',
+      borderRadius: '0.5rem',
+      fontWeight: 600,
+      border: 'none',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)',
+      alignSelf: 'flex-start'
+    },
+    buttonHover: {
+      transform: 'scale(1.05)',
+      boxShadow: '0 6px 20px rgba(249, 115, 22, 0.4)'
+    }
+  };
+
+  const [hoverStates, setHoverStates] = useState({
+    button: false
+  });
+
+  return (
+    <div style={styles.container}>
+      <h2 style={styles.title}>Company Profile</h2>
+      {message && <div style={styles.message}>{message}</div>}
+      
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Company Name</label>
+          <input
+            type="text"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            style={styles.input}
+            required
+          />
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Industry</label>
+            <input
+              type="text"
+              name="industry"
+              value={formData.industry}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            />
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Location</label>
+            <input
+              type="text"
+              name="location"
+              value={formData.location}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            />
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Contact Email</label>
+            <input
+              type="email"
+              name="contactEmail"
+              value={formData.contactEmail}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            />
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Website</label>
+            <input
+              type="url"
+              name="website"
+              value={formData.website}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            />
+          </div>
+        </div>
+
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Company Description</label>
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            style={styles.textarea}
+            required
+          />
+        </div>
+
+        <button
+          type="submit"
+          style={{
+            ...styles.button,
+            ...(hoverStates.button && styles.buttonHover)
+          }}
+          onMouseEnter={() => setHoverStates({ button: true })}
+          onMouseLeave={() => setHoverStates({ button: false })}
+        >
+          Update Profile
+        </button>
+      </form>
+    </div>
+  );
+};
+
+const PostJobPage = () => {
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    requirements: '',
+    qualifications: '',
+    salary: '',
+    deadline: '',
+    location: 'Maseru, Lesotho',
+    type: 'Full-time'
+  });
+  const [message, setMessage] = useState('');
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setMessage('✅ Job posted successfully!');
+    setFormData({
+      title: '',
+      description: '',
+      requirements: '',
+      qualifications: '',
+      salary: '',
+      deadline: '',
+      location: 'Maseru, Lesotho',
+      type: 'Full-time'
+    });
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  const styles = {
+    container: {
+      backgroundColor: 'white',
+      borderRadius: '1rem',
+      padding: '2rem',
+      border: '1px solid #fed7aa',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+      animation: 'fadeIn 0.5s ease-out'
+    },
+    title: {
+      fontSize: '1.875rem',
+      fontWeight: 'bold',
+      color: '#1f2937',
+      marginBottom: '1.5rem'
+    },
+    message: {
+      padding: '0.75rem',
+      backgroundColor: '#dcfce7',
+      color: '#16a34a',
+      borderRadius: '0.5rem',
+      marginBottom: '1rem',
+      textAlign: 'center'
+    },
+    form: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '1.5rem'
+    },
+    inputGroup: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.5rem'
+    },
+    label: {
+      fontWeight: '600',
+      color: '#374151',
+      fontSize: '0.875rem'
+    },
+    input: {
+      padding: '0.75rem',
+      borderRadius: '0.5rem',
+      border: '1px solid #d1d5db',
+      fontSize: '1rem',
+      transition: 'all 0.3s ease'
+    },
+    select: {
+      padding: '0.75rem',
+      borderRadius: '0.5rem',
+      border: '1px solid #d1d5db',
+      fontSize: '1rem',
+      backgroundColor: 'white'
+    },
+    textarea: {
+      padding: '0.75rem',
+      borderRadius: '0.5rem',
+      border: '1px solid #d1d5db',
+      fontSize: '1rem',
+      minHeight: '100px',
+      resize: 'vertical',
+      transition: 'all 0.3s ease'
+    },
+    button: {
+      padding: '0.75rem 1.5rem',
+      background: 'linear-gradient(to right, #f97316, #ec4899)',
+      color: 'white',
+      borderRadius: '0.5rem',
+      fontWeight: 600,
+      border: 'none',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)',
+      alignSelf: 'flex-start'
+    },
+    buttonHover: {
+      transform: 'scale(1.05)',
+      boxShadow: '0 6px 20px rgba(249, 115, 22, 0.4)'
+    },
+    grid: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: '1rem'
+    }
+  };
+
+  const [hoverStates, setHoverStates] = useState({
+    button: false
+  });
+
+  return (
+    <div style={styles.container}>
+      <h2 style={styles.title}>Post New Job</h2>
+      {message && <div style={styles.message}>{message}</div>}
+      
+      <form onSubmit={handleSubmit} style={styles.form}>
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Job Title</label>
+          <input
+            type="text"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            style={styles.input}
+            placeholder="e.g., Senior Software Developer"
+            required
+          />
+        </div>
+
+        <div style={styles.grid}>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Job Type</label>
+            <select
+              name="type"
+              value={formData.type}
+              onChange={handleChange}
+              style={styles.select}
+              required
+            >
+              <option value="Full-time">Full-time</option>
+              <option value="Part-time">Part-time</option>
+              <option value="Contract">Contract</option>
+              <option value="Internship">Internship</option>
+            </select>
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Location</label>
+            <input
+              type="text"
+              name="location"
+              value={formData.location}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            />
+          </div>
+        </div>
+
+        <div style={styles.grid}>
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Salary Range</label>
+            <input
+              type="text"
+              name="salary"
+              value={formData.salary}
+              onChange={handleChange}
+              style={styles.input}
+              placeholder="e.g., M15,000 - M20,000"
+            />
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Application Deadline</label>
+            <input
+              type="date"
+              name="deadline"
+              value={formData.deadline}
+              onChange={handleChange}
+              style={styles.input}
+              required
+            />
+          </div>
+        </div>
+
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Job Description</label>
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            style={styles.textarea}
+            placeholder="Describe the role, responsibilities, and what you're looking for in a candidate..."
+            required
+          />
+        </div>
+
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Qualifications & Requirements</label>
+          <textarea
+            name="qualifications"
+            value={formData.qualifications}
+            onChange={handleChange}
+            style={styles.textarea}
+            placeholder="List the required qualifications, skills, and experience..."
+            required
+          />
+        </div>
+
+        <div style={styles.inputGroup}>
+          <label style={styles.label}>Additional Requirements</label>
+          <textarea
+            name="requirements"
+            value={formData.requirements}
+            onChange={handleChange}
+            style={styles.textarea}
+            placeholder="Any additional requirements or preferences..."
+          />
+        </div>
+
+        <button
+          type="submit"
+          style={{
+            ...styles.button,
+            ...(hoverStates.button && styles.buttonHover)
+          }}
+          onMouseEnter={() => setHoverStates({ button: true })}
+          onMouseLeave={() => setHoverStates({ button: false })}
+        >
+          Post Job
+        </button>
+      </form>
+    </div>
+  );
+};
+
+const ApplicantsPage = ({ stats }) => {
+  const [applicants, setApplicants] = useState([
+    {
+      id: 1,
+      name: 'Thabo Moloi',
+      qualification: 'Bachelor of Science',
+      course: 'Computer Science',
+      status: 'Shortlisted',
+      gpa: 3.8,
+      experience: '2 years',
+      certificates: ['React Certified', 'AWS Certified'],
+      matchScore: 95
+    },
+    {
+      id: 2,
+      name: 'Matseliso Mokoena',
+      qualification: 'Diploma',
+      course: 'Information Technology',
+      status: 'Pending',
+      gpa: 3.2,
+      experience: '1 year',
+      certificates: ['Java Certified'],
+      matchScore: 78
+    },
+    {
+      id: 3,
+      name: 'Teboho Phakoe',
+      qualification: 'Bachelor Degree',
+      course: 'Software Engineering',
+      status: 'Rejected',
+      gpa: 2.9,
+      experience: 'No experience',
+      certificates: [],
+      matchScore: 45
+    }
+  ]);
+
+  const [filter, setFilter] = useState('all');
+  const [selectedApplicant, setSelectedApplicant] = useState(null);
+
+  const filteredApplicants = applicants.filter(applicant => {
+    if (filter === 'all') return true;
+    return applicant.status.toLowerCase() === filter;
+  });
+
+  const handleStatusChange = (applicantId, newStatus) => {
+    setApplicants(prev => prev.map(app => 
+      app.id === applicantId ? { ...app, status: newStatus } : app
+    ));
+  };
+
+  const styles = {
+    container: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '1.5rem',
+      animation: 'fadeIn 0.5s ease-out'
+    },
+    header: {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: '1.5rem'
+    },
+    title: {
+      fontSize: '1.875rem',
+      fontWeight: 'bold',
+      color: '#1f2937'
+    },
+    badge: {
+      padding: '0.5rem 1rem',
+      backgroundColor: '#f3e8ff',
+      color: '#7c3aed',
+      borderRadius: '9999px',
+      fontWeight: 600
+    },
+    filters: {
+      display: 'flex',
+      gap: '0.5rem',
+      marginBottom: '1rem'
+    },
+    filterButton: {
+      padding: '0.5rem 1rem',
+      borderRadius: '0.5rem',
+      border: '1px solid #d1d5db',
+      backgroundColor: 'white',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease'
+    },
+    filterButtonActive: {
+      backgroundColor: '#f97316',
+      color: 'white',
+      borderColor: '#f97316'
+    },
+    applicantsGrid: {
+      display: 'grid',
+      gap: '1rem'
+    },
+    applicantCard: {
+      backgroundColor: 'white',
+      borderRadius: '1rem',
+      padding: '1.5rem',
+      border: '1px solid #fed7aa',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease'
+    },
+    applicantCardHover: {
+      transform: 'translateY(-0.25rem)',
+      boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+    },
+    applicantHeader: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: '1rem'
+    },
+    applicantName: {
+      fontSize: '1.25rem',
+      fontWeight: 'bold',
+      color: '#1f2937',
+      marginBottom: '0.25rem'
+    },
+    applicantDetails: {
+      color: '#6b7280',
+      fontSize: '0.875rem',
+      marginBottom: '0.5rem'
+    },
+    matchScore: {
+      padding: '0.25rem 0.75rem',
+      backgroundColor: '#dcfce7',
+      color: '#16a34a',
+      borderRadius: '9999px',
+      fontSize: '0.75rem',
+      fontWeight: 600
+    },
+    statusBadge: {
+      padding: '0.25rem 0.75rem',
+      borderRadius: '9999px',
+      fontSize: '0.75rem',
+      fontWeight: 600
+    },
+    statusShortlisted: {
+      backgroundColor: '#fef3c7',
+      color: '#d97706'
+    },
+    statusPending: {
+      backgroundColor: '#dbeafe',
+      color: '#2563eb'
+    },
+    statusRejected: {
+      backgroundColor: '#fee2e2',
+      color: '#dc2626'
+    },
+    actions: {
+      display: 'flex',
+      gap: '0.5rem',
+      marginTop: '1rem'
+    },
+    actionButton: {
+      padding: '0.5rem 1rem',
+      borderRadius: '0.5rem',
+      border: 'none',
+      cursor: 'pointer',
+      fontSize: '0.875rem',
+      fontWeight: 500,
+      transition: 'all 0.3s ease'
+    },
+    buttonShortlist: {
+      backgroundColor: '#fef3c7',
+      color: '#d97706'
+    },
+    buttonReject: {
+      backgroundColor: '#fee2e2',
+      color: '#dc2626'
+    },
+    buttonInvite: {
+      backgroundColor: '#dbeafe',
+      color: '#2563eb'
+    },
+    modal: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 100
+    },
+    modalContent: {
+      backgroundColor: 'white',
+      borderRadius: '1rem',
+      padding: '2rem',
+      maxWidth: '600px',
+      width: '90%',
+      maxHeight: '80vh',
+      overflow: 'auto'
+    }
+  };
+
+  const [hoverStates, setHoverStates] = useState({});
+
+  return (
+    <div style={styles.container}>
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '1rem',
+        padding: '2rem',
+        border: '1px solid #fed7aa',
+        boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+      }}>
+        <div style={styles.header}>
+          <h2 style={styles.title}>Qualified Applicants</h2>
+          <span style={styles.badge}>{stats.totalApplicants} Total Applicants</span>
+        </div>
+
+        <div style={styles.filters}>
+          {['all', 'shortlisted', 'pending', 'rejected'].map(status => (
+            <button
+              key={status}
+              onClick={() => setFilter(status)}
+              style={{
+                ...styles.filterButton,
+                ...(filter === status && styles.filterButtonActive)
+              }}
+            >
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </button>
+          ))}
+        </div>
+
+        <div style={styles.applicantsGrid}>
+          {filteredApplicants.map(applicant => (
+            <div
+              key={applicant.id}
+              style={{
+                ...styles.applicantCard,
+                ...(hoverStates[applicant.id] && styles.applicantCardHover)
+              }}
+              onMouseEnter={() => setHoverStates(prev => ({ ...prev, [applicant.id]: true }))}
+              onMouseLeave={() => setHoverStates(prev => ({ ...prev, [applicant.id]: false }))}
+              onClick={() => setSelectedApplicant(applicant)}
+            >
+              <div style={styles.applicantHeader}>
+                <div>
+                  <h3 style={styles.applicantName}>{applicant.name}</h3>
+                  <p style={styles.applicantDetails}>
+                    {applicant.qualification} in {applicant.course} • GPA: {applicant.gpa} • {applicant.experience} experience
+                  </p>
+                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                    {applicant.certificates.map((cert, index) => (
+                      <span key={index} style={{
+                        padding: '0.25rem 0.5rem',
+                        backgroundColor: '#f3f4f6',
+                        borderRadius: '0.375rem',
+                        fontSize: '0.75rem',
+                        color: '#374151'
+                      }}>
+                        {cert}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
+                  <span style={styles.matchScore}>{applicant.matchScore}% Match</span>
+                  <span style={{
+                    ...styles.statusBadge,
+                    ...styles[`status${applicant.status}`]
+                  }}>
+                    {applicant.status}
+                  </span>
+                </div>
+              </div>
+              
+              <div style={styles.actions}>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleStatusChange(applicant.id, 'Shortlisted');
+                  }}
+                  style={{ ...styles.actionButton, ...styles.buttonShortlist }}
+                >
+                  <CheckCircle size={16} style={{ marginRight: '0.25rem' }} />
+                  Shortlist
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleStatusChange(applicant.id, 'Rejected');
+                  }}
+                  style={{ ...styles.actionButton, ...styles.buttonReject }}
+                >
+                  <XCircle size={16} style={{ marginRight: '0.25rem' }} />
+                  Reject
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {selectedApplicant && (
+        <div style={styles.modal} onClick={() => setSelectedApplicant(null)}>
+          <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <h3 style={styles.applicantName}>{selectedApplicant.name}</h3>
+            <p style={styles.applicantDetails}>
+              {selectedApplicant.qualification} in {selectedApplicant.course}
+            </p>
+            <p>GPA: {selectedApplicant.gpa}</p>
+            <p>Experience: {selectedApplicant.experience}</p>
+            <p>Certificates: {selectedApplicant.certificates.join(', ')}</p>
+            <p>Match Score: {selectedApplicant.matchScore}%</p>
+            <button onClick={() => setSelectedApplicant(null)}>Close</button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const InvitationsPage = () => {
+  const [formData, setFormData] = useState({
+    applicantEmail: '',
+    message: '',
+    date: '',
+    time: '',
+    position: ''
+  });
+  const [status, setStatus] = useState('');
+  const [sentInvitations, setSentInvitations] = useState([
+    {
+      id: 1,
+      applicantEmail: 'thabo.moloi@email.com',
+      position: 'Senior Developer',
+      date: '2024-02-15',
+      time: '14:00',
+      status: 'Pending'
+    },
+    {
+      id: 2,
+      applicantEmail: 'matseliso.m@email.com',
+      position: 'Junior Developer',
+      date: '2024-02-14',
+      time: '10:30',
+      status: 'Accepted'
+    }
+  ]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setStatus('✅ Invitation sent successfully!');
+    setSentInvitations(prev => [...prev, {
+      id: prev.length + 1,
+      applicantEmail: formData.applicantEmail,
+      position: formData.position,
+      date: formData.date,
+      time: formData.time,
+      status: 'Pending'
+    }]);
+    setFormData({
+      applicantEmail: '',
+      message: '',
+      date: '',
+      time: '',
+      position: ''
+    });
+    setTimeout(() => setStatus(''), 3000);
+  };
+
+  const styles = {
+    container: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '1.5rem',
+      animation: 'fadeIn 0.5s ease-out'
+    },
+    formCard: {
       backgroundColor: 'white',
       borderRadius: '1rem',
       padding: '2rem',
       border: '1px solid #fed7aa',
       boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-        <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937' }}>
-          View Applicants
-        </h2>
-        <span style={{
-          padding: '0.5rem 1rem',
-          backgroundColor: '#f3e8ff',
-          color: '#7c3aed',
-          borderRadius: '9999px',
-          fontWeight: 600
-        }}>
-          {stats.totalApplicants} Total
-        </span>
-      </div>
-      <p style={{ color: '#6b7280' }}>Applicants management interface would go here...</p>
-    </div>
-  </div>
-);
+    },
+    invitationsCard: {
+      backgroundColor: 'white',
+      borderRadius: '1rem',
+      padding: '2rem',
+      border: '1px solid #fed7aa',
+      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
+    },
+    title: {
+      fontSize: '1.875rem',
+      fontWeight: 'bold',
+      color: '#1f2937',
+      marginBottom: '1.5rem'
+    },
+    message: {
+      padding: '0.75rem',
+      backgroundColor: '#dcfce7',
+      color: '#16a34a',
+      borderRadius: '0.5rem',
+      marginBottom: '1rem',
+      textAlign: 'center'
+    },
+    form: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '1.5rem'
+    },
+    inputGroup: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.5rem'
+    },
+    label: {
+      fontWeight: '600',
+      color: '#374151',
+      fontSize: '0.875rem'
+    },
+    input: {
+      padding: '0.75rem',
+      borderRadius: '0.5rem',
+      border: '1px solid #d1d5db',
+      fontSize: '1rem',
+      transition: 'all 0.3s ease'
+    },
+    textarea: {
+      padding: '0.75rem',
+      borderRadius: '0.5rem',
+      border: '1px solid #d1d5db',
+      fontSize: '1rem',
+      minHeight: '100px',
+      resize: 'vertical',
+      transition: 'all 0.3s ease'
+    },
+    button: {
+      padding: '0.75rem 1.5rem',
+      background: 'linear-gradient(to right, #f97316, #ec4899)',
+      color: 'white',
+      borderRadius: '0.5rem',
+      fontWeight: 600,
+      border: 'none',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)',
+      alignSelf: 'flex-start'
+    },
+    buttonHover: {
+      transform: 'scale(1.05)',
+      boxShadow: '0 6px 20px rgba(249, 115, 22, 0.4)'
+    },
+    grid: {
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr',
+      gap: '1rem'
+    },
+    invitationsList: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '1rem'
+    },
+    invitationItem: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: '1rem',
+      backgroundColor: '#f8fafc',
+      borderRadius: '0.75rem',
+      border: '1px solid #e2e8f0'
+    },
+    invitationDetails: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.25rem'
+    },
+    invitationEmail: {
+      fontWeight: '600',
+      color: '#1f2937'
+    },
+    invitationMeta: {
+      fontSize: '0.875rem',
+      color: '#6b7280'
+    },
+    statusBadge: {
+      padding: '0.25rem 0.75rem',
+      borderRadius: '9999px',
+      fontSize: '0.75rem',
+      fontWeight: 600
+    },
+    statusPending: {
+      backgroundColor: '#fef3c7',
+      color: '#d97706'
+    },
+    statusAccepted: {
+      backgroundColor: '#dcfce7',
+      color: '#16a34a'
+    },
+    statusDeclined: {
+      backgroundColor: '#fee2e2',
+      color: '#dc2626'
+    }
+  };
 
-const InvitationsPage = () => (
-  <div style={{
-    backgroundColor: 'white',
-    borderRadius: '1rem',
-    padding: '2rem',
-    border: '1px solid #fed7aa',
-    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-  }}>
-    <h2 style={{ fontSize: '1.875rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1.5rem' }}>
-      Send Invitations
-    </h2>
-    <p style={{ color: '#6b7280' }}>Invitation management interface would go here...</p>
-  </div>
-);
+  const [hoverStates, setHoverStates] = useState({
+    button: false
+  });
+
+  return (
+    <div style={styles.container}>
+      <div style={styles.formCard}>
+        <h2 style={styles.title}>Send Interview Invitation</h2>
+        {status && <div style={styles.message}>{status}</div>}
+        
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <div style={styles.grid}>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Applicant Email</label>
+              <input
+                type="email"
+                name="applicantEmail"
+                placeholder="applicant@email.com"
+                value={formData.applicantEmail}
+                onChange={handleChange}
+                style={styles.input}
+                required
+              />
+            </div>
+
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Position</label>
+              <input
+                type="text"
+                name="position"
+                placeholder="e.g., Senior Developer"
+                value={formData.position}
+                onChange={handleChange}
+                style={styles.input}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={styles.grid}>
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Interview Date</label>
+              <input
+                type="date"
+                name="date"
+                value={formData.date}
+                onChange={handleChange}
+                style={styles.input}
+                required
+              />
+            </div>
+
+            <div style={styles.inputGroup}>
+              <label style={styles.label}>Interview Time</label>
+              <input
+                type="time"
+                name="time"
+                value={formData.time}
+                onChange={handleChange}
+                style={styles.input}
+                required
+              />
+            </div>
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Invitation Message</label>
+            <textarea
+              name="message"
+              placeholder="Dear applicant, we are pleased to invite you for an interview..."
+              value={formData.message}
+              onChange={handleChange}
+              style={styles.textarea}
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            style={{
+              ...styles.button,
+              ...(hoverStates.button && styles.buttonHover)
+            }}
+            onMouseEnter={() => setHoverStates({ button: true })}
+            onMouseLeave={() => setHoverStates({ button: false })}
+          >
+            <Send size={16} style={{ marginRight: '0.5rem' }} />
+            Send Invitation
+          </button>
+        </form>
+      </div>
+
+      <div style={styles.invitationsCard}>
+        <h3 style={styles.title}>Sent Invitations</h3>
+        <div style={styles.invitationsList}>
+          {sentInvitations.map(invitation => (
+            <div key={invitation.id} style={styles.invitationItem}>
+              <div style={styles.invitationDetails}>
+                <span style={styles.invitationEmail}>{invitation.applicantEmail}</span>
+                <span style={styles.invitationMeta}>
+                  {invitation.position} • {invitation.date} at {invitation.time}
+                </span>
+              </div>
+              <span style={{
+                ...styles.statusBadge,
+                ...styles[`status${invitation.status}`]
+              }}>
+                {invitation.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <style>{`
+        @media (min-width: 768px) {
+          .desktop-nav { display: flex !important; }
+          .sidebar { display: block !important; }
+          .mobile-menu-button { display: none !important; }
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease-out;
+        }
+      `}</style>
+      <Footer/>
+    </div>
+  );
+};
 
 export default CompanyDashboard;

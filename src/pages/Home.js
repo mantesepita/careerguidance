@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { LogOut, Menu, X, ArrowRight, Sparkles, Target, TrendingUp, Users, Briefcase, GraduationCap, Heart, Newspaper, DollarSign, Building2, ChevronRight, Calendar, MapPin, Clock } from 'lucide-react';
 import './Home.css';
 import logo from './logo.png';
+import Footer from './Footer';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -559,67 +560,7 @@ const Home = () => {
           ))}
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="footer">
-        <div className="footer-content">
-          <div className="footer-grid">
-            <div>
-              <div className="footer-logo">
-                <div className="logo">
-                  <img 
-                  src={logo}
-                  alt="logo" 
-                  width="50" 
-                  height="75"
-                />
-                </div>
-                <span className="logo-text">
-                  ThutoPele
-                </span>
-              </div>
-              <p className="footer-description">
-                Mokorotlo oa thuto le mesebetsi 
-              </p>
-            </div>
-            
-            <div>
-              <h4 className="footer-heading">Quick Links</h4>
-              <ul className="footer-links">
-                <li><a href="#" className="footer-link">About Us</a></li>
-                <li><a href="#" className="footer-link">Careers</a></li>
-                <li><a href="#" className="footer-link">Resources</a></li>
-                <li><a href="#" className="footer-link">Blog</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="footer-heading">Support</h4>
-              <ul className="footer-links">
-                <li><a href="#" className="footer-link">Help Center</a></li>
-                <li><a href="#" className="footer-link">Contact Us</a></li>
-                <li><a href="#" className="footer-link">Privacy Policy</a></li>
-                <li><a href="#" className="footer-link">Terms of Service</a></li>
-              </ul>
-            </div>
-            
-            <div>
-              <h4 className="footer-heading">Location</h4>
-              <p className="footer-location">
-                <MapPin className="w-4 h-4 inline mr-1 text-orange-500" />
-                Maseru, Lesotho
-              </p>
-              <p className="footer-description">
-                Serving all 10 districts of Lesotho
-              </p>
-            </div>
-          </div>
-          
-          <div className="footer-copyright">
-            © 2025 ThutoPele. Empowering careers across Lesotho, one step at a time.
-          </div>
-        </div>
-      </footer>
+         <Footer/> 
     </div>
   );
 };

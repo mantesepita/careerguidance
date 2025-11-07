@@ -11,7 +11,14 @@ const Login = () => {
   const [focusedField, setFocusedField] = useState(null);
   const [isHovering, setIsHovering] = useState(false);
   
-  const { login } = useAuth();
+  // Forgot password states
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState('');
+  const [resetError, setResetError] = useState('');
+  
+  const { login, resetPassword } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -51,6 +58,34 @@ const Login = () => {
     }
     
     setLoading(false);
+  };
+
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setResetError('');
+    setResetSuccess('');
+    setResetLoading(true);
+
+    try {
+      const result = await resetPassword(resetEmail);
+      
+      if (result.success) {
+        setResetSuccess('✅ Password reset email sent! Check your inbox.');
+        setResetEmail('');
+        // Auto close modal after 3 seconds
+        setTimeout(() => {
+          setShowForgotPassword(false);
+          setResetSuccess('');
+        }, 3000);
+      } else {
+        setResetError(result.error || 'Failed to send reset email');
+      }
+    } catch (err) {
+      setResetError('Failed to send reset email. Please try again.');
+      console.error('Reset password error:', err);
+    }
+    
+    setResetLoading(false);
   };
 
   // Updated inline styles to match orange-pink theme
@@ -148,6 +183,13 @@ const Login = () => {
       borderRadius: '0.5rem',
       animation: 'shake 0.5s ease-in-out'
     },
+    successContainer: {
+      marginBottom: '1.5rem',
+      padding: '1rem',
+      backgroundColor: 'rgba(220, 252, 231, 0.8)',
+      border: '1px solid #bbf7d0',
+      borderRadius: '0.5rem'
+    },
     errorContent: {
       display: 'flex',
       alignItems: 'center',
@@ -155,6 +197,11 @@ const Login = () => {
     },
     errorText: {
       color: '#dc2626',
+      fontSize: '0.875rem',
+      fontWeight: '500'
+    },
+    successText: {
+      color: '#16a34a',
       fontSize: '0.875rem',
       fontWeight: '500'
     },
@@ -214,6 +261,18 @@ const Login = () => {
       top: '50%',
       transform: 'translateY(-50%)',
       color: '#9ca3af'
+    },
+    forgotPasswordLink: {
+      textAlign: 'right',
+      marginTop: '-0.75rem'
+    },
+    forgotPasswordText: {
+      color: '#dc2626',
+      fontSize: '0.875rem',
+      fontWeight: '600',
+      cursor: 'pointer',
+      textDecoration: 'none',
+      transition: 'color 0.3s'
     },
     button: {
       width: '100%',
@@ -280,6 +339,61 @@ const Login = () => {
       filter: 'blur(12px)',
       opacity: 0.3,
       borderRadius: '50%'
+    },
+    // Modal styles
+    modalOverlay: {
+      position: 'fixed',
+      inset: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: '1rem',
+      backdropFilter: 'blur(8px)',
+      animation: 'fadeIn 0.3s ease-out'
+    },
+    modalContent: {
+      backgroundColor: 'white',
+      borderRadius: '1rem',
+      boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)',
+      width: '100%',
+      maxWidth: '400px',
+      border: '1px solid #fed7aa',
+      animation: 'slideUp 0.3s ease-out'
+    },
+    modalHeader: {
+      padding: '1.5rem',
+      borderBottom: '1px solid #fed7aa',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    },
+    modalTitle: {
+      fontSize: '1.25rem',
+      fontWeight: 'bold',
+      color: '#111827',
+      margin: 0
+    },
+    modalClose: {
+      background: 'none',
+      border: 'none',
+      cursor: 'pointer',
+      padding: '0.5rem',
+      borderRadius: '0.5rem',
+      transition: 'background-color 0.3s',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    modalBody: {
+      padding: '1.5rem'
+    },
+    modalDescription: {
+      color: '#6b7280',
+      fontSize: '0.875rem',
+      marginBottom: '1.5rem',
+      lineHeight: '1.5'
     }
   };
 
@@ -305,9 +419,7 @@ const Login = () => {
           <div style={styles.cardContent}>
             {/* Header */}
             <div style={styles.header}>
-              <div 
-                
-              >
+              <div>
                 <img 
                   src={logo}
                   alt="logo" 
@@ -408,6 +520,18 @@ const Login = () => {
                 </div>
               </div>
 
+              {/* Forgot Password Link */}
+              <div style={styles.forgotPasswordLink}>
+                <span 
+                  style={styles.forgotPasswordText}
+                  onClick={() => setShowForgotPassword(true)}
+                  onMouseEnter={(e) => e.target.style.color = '#ec4899'}
+                  onMouseLeave={(e) => e.target.style.color = '#dc2626'}
+                >
+                  Forgot Password?
+                </span>
+              </div>
+
               {/* Submit button */}
               <button
                 type="submit"
@@ -461,6 +585,122 @@ const Login = () => {
         <div style={styles.bottomGlow}></div>
       </div>
 
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div style={styles.modalOverlay} onClick={() => setShowForgotPassword(false)}>
+          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h2 style={styles.modalTitle}>Reset Password</h2>
+              <button 
+                style={styles.modalClose}
+                onClick={() => setShowForgotPassword(false)}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fed7aa'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+              >
+                <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div style={styles.modalBody}>
+              <p style={styles.modalDescription}>
+                Enter your email address and we'll send you a link to reset your password.
+              </p>
+
+              {/* Success message */}
+              {resetSuccess && (
+                <div style={styles.successContainer}>
+                  <div style={styles.errorContent}>
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span style={styles.successText}>{resetSuccess}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Error message */}
+              {resetError && (
+                <div style={styles.errorContainer}>
+                  <div style={styles.errorContent}>
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                    <span style={styles.errorText}>{resetError}</span>
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleForgotPassword} style={styles.form}>
+                <div style={styles.formGroup}>
+                  <label style={styles.label}>Email Address</label>
+                  <div style={styles.inputContainer}>
+                    <div 
+                      style={{
+                        ...styles.inputGlow,
+                        opacity: focusedField === 'resetEmail' ? 0.3 : 0
+                      }}
+                    ></div>
+                    <div style={styles.inputWrapper}>
+                      <input
+                        type="email"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                        onFocus={() => setFocusedField('resetEmail')}
+                        onBlur={() => setFocusedField(null)}
+                        required
+                        disabled={resetLoading}
+                        placeholder="Enter your email"
+                        style={{
+                          ...styles.input,
+                          ...(focusedField === 'resetEmail' && styles.inputFocus),
+                          ...(resetLoading && styles.inputDisabled)
+                        }}
+                      />
+                      <div style={styles.inputIcon}>
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  style={{
+                    ...styles.button,
+                    ...(resetLoading && styles.buttonDisabled)
+                  }}
+                >
+                  <div style={styles.buttonGradient}></div>
+                  <div style={styles.buttonContent}>
+                    {resetLoading ? (
+                      <>
+                        <svg style={{ animation: 'spin 1s linear infinite' }} width="16" height="16" fill="none" viewBox="0 0 24 24">
+                          <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        Send Reset Link
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </>
+                    )}
+                  </div>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       <style>{`
         @keyframes blob {
           0% { transform: translate(0px, 0px) scale(1); }
@@ -478,6 +718,22 @@ const Login = () => {
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+          from { 
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         
         input::placeholder {
