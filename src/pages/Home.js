@@ -8,7 +8,7 @@ import Footer from './Footer';
 
 const Home = () => {
   const navigate = useNavigate();
-  const { currentUser, logout } = useAuth();
+  const { currentUser,userData, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [activeNewsTab, setActiveNewsTab] = useState('business');
@@ -28,14 +28,25 @@ const Home = () => {
   };
 
   const handleGetStarted = () => {
-    if (currentUser) {
-      // User is logged in, navigate to dashboard or profile
-      navigate("/dashboard");
+  if (currentUser) {
+    // User is logged in, navigate to appropriate dashboard based on role
+    if (userData?.role === 'student') {
+      navigate("/student");
+    } else if (userData?.role === 'institution') {
+      navigate("/institute");
+    } else if (userData?.role === 'company') {
+      navigate("/company");
+    } else if (userData?.role === 'admin') {
+      navigate("/admin");
     } else {
-      // User is not logged in, navigate to login
-      navigate("/login");
+      // Fallback: if no role is found, navigate to generic dashboard
+      navigate("/dashboard");
     }
-  };
+  } else {
+    // User is not logged in, navigate to login
+    navigate("/login");
+  }
+};
 
   const features = [
     {

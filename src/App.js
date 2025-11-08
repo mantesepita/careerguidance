@@ -2,10 +2,12 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
+
 // Import pages
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import Resources from './pages/Resources';
 import AdminDashboard from './pages/AdminDashboard';
 import InstituteDashboard from './pages/InstituteDashboard';
 import StudentDashboard from './pages/StudentDashboard';
@@ -110,7 +112,7 @@ function AppRoutes() {
             )
           }
         />
-
+        <Route path="/resources" element={<Resources />} />
         {/* 🔐 Protected Routes by Role */}
         <Route
           path="/admin/*"

@@ -10,6 +10,7 @@ import {
   createDocumentWithId
 } from '../firebase/helpers';
 import logo from './logo.png';
+import Footer from './Footer';
 
 const InstituteDashboard = () => {
   const { currentUser, logout } = useAuth();

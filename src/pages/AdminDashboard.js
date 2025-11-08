@@ -1419,10 +1419,15 @@ const InstitutionsPage = ({ stats, refreshStats }) => {
   };
 
   const filteredInstitutions = institutions.filter(institution => {
-    const matchesSearch = institution.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         institution.acronym.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         institution.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || institution.status === statusFilter;
+    // Safely handle potentially undefined properties
+    const name = institution?.name || '';
+    const acronym = institution?.acronym || '';
+    const email = institution?.email || '';
+    
+    const matchesSearch = name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         acronym.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || institution?.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -1668,11 +1673,12 @@ const InstitutionsPage = ({ stats, refreshStats }) => {
                         fontWeight: 'bold',
                         fontSize: '0.875rem'
                       }}>
-                        {institution.acronym.substring(0, 2)}
+                        {/* FIX: Safely handle acronym */}
+                        {(institution?.acronym || 'IN').substring(0, 2)}
                       </div>
                       <div>
-                        <div style={{ fontWeight: '600', color: '#1f2937' }}>{institution.name}</div>
-                        {institution.website && (
+                        <div style={{ fontWeight: '600', color: '#1f2937' }}>{institution?.name || 'Unnamed Institution'}</div>
+                        {institution?.website && (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: '#6b7280' }}>
                             <Globe size={12} />
                             <a href={institution.website} target="_blank" rel="noopener noreferrer" style={{ color: '#3b82f6' }}>
@@ -1692,15 +1698,16 @@ const InstitutionsPage = ({ stats, refreshStats }) => {
                       borderRadius: '0.25rem',
                       fontSize: '0.75rem'
                     }}>
-                      {institution.acronym}
+                      {/* FIX: Safely handle acronym */}
+                      {institution?.acronym || 'N/A'}
                     </span>
                   </td>
                   <td style={pageStyles.td}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <Mail size={14} color="#6b7280" />
-                      {institution.email}
+                      {institution?.email || 'No email'}
                     </div>
-                    {institution.phone && (
+                    {institution?.phone && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>
                         <Phone size={12} />
                         {institution.phone}
@@ -1710,10 +1717,10 @@ const InstitutionsPage = ({ stats, refreshStats }) => {
                   <td style={pageStyles.td}>
                     <span style={{
                       ...pageStyles.statusBadge,
-                      ...(institution.status === 'active' ? pageStyles.statusActive : 
-                           institution.status === 'pending' ? pageStyles.statusPending : pageStyles.statusSuspended)
+                      ...(institution?.status === 'active' ? pageStyles.statusActive : 
+                           institution?.status === 'pending' ? pageStyles.statusPending : pageStyles.statusSuspended)
                     }}>
-                      {institution.status}
+                      {institution?.status || 'pending'}
                     </span>
                   </td>
                   <td style={pageStyles.td}>
@@ -1730,7 +1737,7 @@ const InstitutionsPage = ({ stats, refreshStats }) => {
                         <Edit size={14} />
                         Edit
                       </button>
-                      {institution.status === 'pending' && (
+                      {institution?.status === 'pending' && (
                         <button 
                           onClick={() => handleStatusChange(institution.id, 'active')}
                           style={{
@@ -1744,7 +1751,7 @@ const InstitutionsPage = ({ stats, refreshStats }) => {
                           Approve
                         </button>
                       )}
-                      {institution.status === 'active' && (
+                      {institution?.status === 'active' && (
                         <button 
                           onClick={() => handleStatusChange(institution.id, 'suspended')}
                           style={{
@@ -1782,7 +1789,6 @@ const InstitutionsPage = ({ stats, refreshStats }) => {
   );
 };
 
-// CompaniesPage Component
 // CompaniesPage Component
 const CompaniesPage = ({ stats, refreshStats }) => {
   const [companies, setCompanies] = useState([]);
