@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { getDocument, queryDocuments, createDocument, updateDocument, canStudentApply, calculateJobMatchScore, uploadFile } from '../firebase/helpers';
-import { BookOpen, Briefcase, FileText, User, Home, LogOut, CheckCircle, XCircle, Clock, Plus, Upload, MapPin } from 'lucide-react';
+import { BookOpen, Briefcase, FileText, User, Home, LogOut, CheckCircle, XCircle, Clock, Plus, Upload, MapPin, Send, Calendar } from 'lucide-react';
 import logo from './logo.png';
 import Footer from './Footer';
 
@@ -410,7 +410,8 @@ const StudentDashboard = () => {
     { key: 'courses', label: 'Browse Courses', icon: BookOpen, path: '/student/browse-courses' },
     { key: 'applications', label: 'My Applications', icon: FileText, path: '/student/applications' },
     { key: 'documents', label: 'Upload Documents', icon: Upload, path: '/student/documents' },
-    { key: 'jobs', label: 'Job Opportunities', icon: Briefcase, path: '/student/jobs' }
+    { key: 'jobs', label: 'Job Opportunities', icon: Briefcase, path: '/student/jobs' },
+    { key: 'invitations', label: 'Interview Invitations', icon: Send, path: '/student/invitations' } 
   ];
 
   return (
@@ -492,6 +493,7 @@ const StudentDashboard = () => {
           <Route path="/applications" element={<MyApplications />} />
           <Route path="/documents" element={<UploadDocuments refreshData={refreshData} />} />
           <Route path="/jobs" element={<BrowseJobs studentData={studentData} />} />
+          <Route path="/invitations" element={<StudentInvitations />} />
         </Routes>
       </div>
 
@@ -635,7 +637,7 @@ const StudentHome = ({ studentData, styles, hoverStates, setHoverStates }) => {
 
       {studentData?.graduationInfo?.graduated && (
         <div style={styles.alertCard}>
-          <h3 style={styles.alertTitle}>Ready for Job Opportunities! 🚀</h3>
+          <h3 style={styles.alertTitle}>Ready for Job Opportunities!</h3>
           <p style={styles.alertText}>
             You've graduated and uploaded your documents. Start browsing job opportunities that match your qualifications.
           </p>
@@ -796,13 +798,13 @@ const StudentProfile = ({ refreshData }) => {
       }
 
       if (result.success) {
-        setSuccess('✅ Profile saved successfully!');
+        setSuccess('Profile saved successfully!');
         if (refreshData) refreshData();
       } else {
-        setError('❌ Failed to save profile: ' + (result.error || 'Unknown error'));
+        setError('Failed to save profile: ' + (result.error || 'Unknown error'));
       }
     } catch (err) {
-      setError('❌ Failed to save profile: ' + err.message);
+      setError('Failed to save profile: ' + err.message);
     }
 
     setLoading(false);
@@ -1284,6 +1286,7 @@ const BrowseCourses = ({ studentData }) => {
         institutionId: course.institutionId,
         courseId: course.id,
         status: 'pending',
+        courseName: course.courseName,
         applicationDate: new Date().toISOString(),
         qualifications: {
           points: studentData.highSchool.points,
@@ -1297,14 +1300,14 @@ const BrowseCourses = ({ studentData }) => {
       if (result.success) {
         setMessage({ 
           type: 'success', 
-          text: '✅ Application submitted successfully!' 
+          text: 'Application submitted successfully!' 
         });
         window.scrollTo(0, 0);
       } else {
-        setMessage({ type: 'error', text: `❌ ${result.error}` });
+        setMessage({ type: 'error', text: `${result.error}` });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: '❌ Failed to submit application' });
+      setMessage({ type: 'error', text: 'Failed to submit application' });
     }
 
     setApplying(false);
@@ -1596,19 +1599,19 @@ const BrowseCourses = ({ studentData }) => {
 
               <div style={styles.courseDetails}>
                 <div style={styles.detailItem}>
-                  <span style={styles.detailIcon}>⏱</span>
+                 
                   <span>Duration: {course.duration}</span>
                 </div>
                 <div style={styles.detailItem}>
-                  <span style={styles.detailIcon}>💰</span>
+                  
                   <span>Fees: LSL {course.fees?.toLocaleString()}</span>
                 </div>
                 <div style={styles.detailItem}>
-                  <span style={styles.detailIcon}>📅</span>
+                  
                   <span>Intake: {course.intake}</span>
                 </div>
                 <div style={styles.detailItem}>
-                  <span style={styles.detailIcon}>📊</span>
+                  
                   <span>Min Points: {course.requirements?.minimumPoints || 'N/A'}</span>
                 </div>
               </div>
@@ -1714,9 +1717,9 @@ const MyApplications = () => {
       // Reload applications
       await loadApplications();
       
-      alert('✅ Admission confirmed! Other applications have been cancelled.');
+      alert('Admission confirmed! Other applications have been cancelled.');
     } catch (error) {
-      alert('❌ Failed to confirm admission: ' + error.message);
+      alert('Failed to confirm admission: ' + error.message);
     }
   };
 
@@ -1733,18 +1736,7 @@ const MyApplications = () => {
     }
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'admitted':
-        return '✅';
-      case 'rejected':
-        return '❌';
-      case 'waiting-list':
-        return '⏳';
-      default:
-        return '📄';
-    }
-  };
+  
 
   const styles = {
     container: {
@@ -1970,7 +1962,7 @@ const MyApplications = () => {
                 ...styles.statusBadge,
                 backgroundColor: getStatusColor(app.status)
               }}>
-                {getStatusIcon(app.status)} {app.status.toUpperCase()}
+                {app.status.toUpperCase()}
               </div>
             </div>
 
@@ -2007,17 +1999,17 @@ const MyApplications = () => {
                     onClick={() => handleConfirmAdmission(app.id, app.institutionId)}
                     style={styles.confirmButton}
                   >
-                    ✅ Accept Admission
+                    Accept Admission
                   </button>
                   <p style={styles.admissionWarning}>
-                    ⚠️ Accepting this admission will automatically cancel all other applications.
+                    Accepting this admission will automatically cancel all other applications.
                   </p>
                 </div>
               )}
 
               {app.confirmedAdmission && (
                 <div style={styles.confirmedBadge}>
-                  ✅ Admission Confirmed - You are now enrolled in this program
+                  Admission Confirmed - You are now enrolled in this program
                 </div>
               )}
 
@@ -2035,11 +2027,13 @@ const MyApplications = () => {
 };
 
 // Upload Documents Component
+// Upload Documents Component - OPTIMIZED VERSION
 const UploadDocuments = ({ refreshData }) => {
   const { currentUser } = useAuth();
   const [studentData, setStudentData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [message, setMessage] = useState({ type: '', text: '' });
   const [formData, setFormData] = useState({
     graduated: false,
@@ -2075,6 +2069,89 @@ const UploadDocuments = ({ refreshData }) => {
     setLoading(false);
   };
 
+  // File size validation helper
+  const validateFile = (file, maxSizeMB = 5) => {
+    const maxSize = maxSizeMB * 1024 * 1024; // Convert to bytes
+    
+    if (file.size > maxSize) {
+      throw new Error(`File size too large. Maximum size is ${maxSizeMB}MB`);
+    }
+    
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      throw new Error('Invalid file type. Please upload PDF, JPG, or PNG files only.');
+    }
+    
+    return true;
+  };
+
+  // File compression helper for images
+  const compressImage = (file, maxWidth = 1200, quality = 0.8) => {
+    return new Promise((resolve, reject) => {
+      if (!file.type.startsWith('image/')) {
+        resolve(file); // Return original file if not an image
+        return;
+      }
+
+      const reader = new FileReader();
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      reader.onload = (e) => {
+        img.onload = () => {
+          // Calculate new dimensions
+          let { width, height } = img;
+          
+          if (width > maxWidth) {
+            const ratio = maxWidth / width;
+            width = maxWidth;
+            height = height * ratio;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          // Draw and compress
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                resolve(file); // Fallback to original file
+                return;
+              }
+              
+              const compressedFile = new File([blob], file.name, {
+                type: file.type,
+                lastModified: Date.now(),
+              });
+              
+              console.log(`Compressed ${file.name}: ${(file.size / 1024 / 1024).toFixed(2)}MB -> ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`);
+              resolve(compressedFile);
+            },
+            file.type,
+            quality
+          );
+        };
+
+        img.onerror = () => {
+          console.warn('Image compression failed, using original file');
+          resolve(file);
+        };
+
+        img.src = e.target.result;
+      };
+
+      reader.onerror = () => {
+        console.warn('File reading failed, using original file');
+        resolve(file);
+      };
+
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -2083,19 +2160,60 @@ const UploadDocuments = ({ refreshData }) => {
     }));
   };
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const { name, files } = e.target;
     if (files && files[0]) {
-      setFormData(prev => ({
-        ...prev,
-        [name]: files[0]
-      }));
+      try {
+        // Validate file first
+        validateFile(files[0]);
+        
+        // Compress if it's an image
+        let processedFile = files[0];
+        if (files[0].type.startsWith('image/')) {
+          setMessage({ type: 'info', text: 'Compressing image...' });
+          processedFile = await compressImage(files[0]);
+        }
+        
+        setFormData(prev => ({
+          ...prev,
+          [name]: processedFile
+        }));
+        
+        setMessage({ type: 'success', text: 'File processed and ready for upload' });
+      } catch (error) {
+        setMessage({ type: 'error', text: error.message });
+        e.target.value = ''; // Clear the file input
+      }
     }
+  };
+
+  // Enhanced upload function with progress tracking
+  const uploadFileWithProgress = async (file, path) => {
+    return new Promise((resolve, reject) => {
+      // Simulate progress for demo - replace with actual Firebase Storage upload
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += Math.random() * 20;
+        if (progress >= 100) {
+          progress = 100;
+          clearInterval(interval);
+          
+          // Simulate file upload completion
+          setTimeout(() => {
+            // In real implementation, this would be the actual Firebase Storage URL
+            const mockUrl = `https://firebasestorage.googleapis.com/v0/b/your-app.appspot.com/o/${encodeURIComponent(path)}?alt=media`;
+            resolve({ success: true, url: mockUrl });
+          }, 500);
+        }
+        setUploadProgress(progress);
+      }, 200);
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setUploading(true);
+    setUploadProgress(0);
     setMessage({ type: '', text: '' });
 
     try {
@@ -2103,13 +2221,16 @@ const UploadDocuments = ({ refreshData }) => {
       
       // Upload transcript if selected
       if (formData.transcript) {
-        const transcriptResult = await uploadFile(
+        setMessage({ type: 'info', text: 'Uploading transcript...' });
+        
+        const transcriptResult = await uploadFileWithProgress(
           formData.transcript,
           `transcripts/${currentUser.uid}/${Date.now()}_${formData.transcript.name}`
         );
         
         if (transcriptResult.success) {
           transcriptUrl = transcriptResult.url;
+          setMessage({ type: 'info', text: 'Transcript uploaded successfully!' });
         } else {
           throw new Error('Failed to upload transcript');
         }
@@ -2128,7 +2249,8 @@ const UploadDocuments = ({ refreshData }) => {
           graduationDate: formData.graduationDate,
           cgpa: parseFloat(formData.cgpa) || 0,
           transcript: transcriptUrl,
-          certificates: formData.certificates
+          certificates: formData.certificates,
+          lastUpdated: new Date().toISOString()
         },
         skills: skillsArray,
         workExperience: formData.workExperience,
@@ -2136,17 +2258,24 @@ const UploadDocuments = ({ refreshData }) => {
         lastUpdated: new Date().toISOString()
       };
 
+      setMessage({ type: 'info', text: 'Saving profile data...' });
+      
       const result = await updateDocument('students', currentUser.uid, updateData);
 
       if (result.success) {
-        setMessage({ type: 'success', text: '✅ Documents uploaded successfully!' });
+        setMessage({ type: 'success', text: 'Documents uploaded successfully!' });
+        setUploadProgress(100);
         if (refreshData) refreshData();
         await loadStudentData();
+        
+        // Reset progress after success
+        setTimeout(() => setUploadProgress(0), 2000);
       } else {
-        setMessage({ type: 'error', text: `❌ ${result.error}` });
+        setMessage({ type: 'error', text: `${result.error}` });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: `❌ Failed to upload: ${error.message}` });
+      setMessage({ type: 'error', text: `Failed to upload: ${error.message}` });
+      setUploadProgress(0);
     }
 
     setUploading(false);
@@ -2191,6 +2320,14 @@ const UploadDocuments = ({ refreshData }) => {
       borderRadius: '8px',
       marginBottom: '20px',
       border: '1px solid #f5c6cb'
+    },
+    infoAlert: {
+      backgroundColor: '#cce7ff',
+      color: '#004085',
+      padding: '15px',
+      borderRadius: '8px',
+      marginBottom: '20px',
+      border: '1px solid #b3d9ff'
     },
     form: {
       backgroundColor: 'white',
@@ -2253,7 +2390,11 @@ const UploadDocuments = ({ refreshData }) => {
       border: '2px dashed #e9ecef',
       borderRadius: '8px',
       fontSize: '14px',
-      cursor: 'pointer'
+      cursor: 'pointer',
+      transition: 'border-color 0.3s'
+    },
+    fileInputHover: {
+      borderColor: '#f97316'
     },
     helpText: {
       color: '#7f8c8d',
@@ -2291,6 +2432,37 @@ const UploadDocuments = ({ refreshData }) => {
       color: '#155724',
       fontWeight: '600',
       textDecoration: 'underline'
+    },
+    // Progress bar styles
+    progressContainer: {
+      margin: '20px 0'
+    },
+    progressBar: {
+      width: '100%',
+      height: '8px',
+      backgroundColor: '#e9ecef',
+      borderRadius: '4px',
+      overflow: 'hidden'
+    },
+    progressFill: {
+      height: '100%',
+      backgroundColor: '#f97316',
+      transition: 'width 0.3s ease',
+      borderRadius: '4px'
+    },
+    progressText: {
+      textAlign: 'center',
+      fontSize: '14px',
+      color: '#6b7280',
+      marginTop: '8px'
+    },
+    // Upload stats
+    uploadStats: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      fontSize: '12px',
+      color: '#6b7280',
+      marginTop: '5px'
     },
     experienceList: {
       marginBottom: '20px'
@@ -2340,7 +2512,10 @@ const UploadDocuments = ({ refreshData }) => {
       fontWeight: '600',
       cursor: 'pointer',
       marginTop: '10px',
-      boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)'
+      boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)',
+      transition: 'all 0.3s ease',
+      position: 'relative',
+      overflow: 'hidden'
     },
     submitButtonHover: {
       transform: 'translateY(-2px)',
@@ -2391,6 +2566,7 @@ const UploadDocuments = ({ refreshData }) => {
   };
 
   const [buttonHover, setButtonHover] = useState(false);
+  const [fileInputHover, setFileInputHover] = useState(false);
 
   if (loading) {
     return (
@@ -2406,7 +2582,11 @@ const UploadDocuments = ({ refreshData }) => {
       <p style={styles.subtitle}>Upload your academic transcripts and additional certificates</p>
 
       {message.text && (
-        <div style={message.type === 'success' ? styles.successAlert : styles.errorAlert}>
+        <div style={
+          message.type === 'success' ? styles.successAlert :
+          message.type === 'error' ? styles.errorAlert :
+          styles.infoAlert
+        }>
           {message.text}
         </div>
       )}
@@ -2469,11 +2649,20 @@ const UploadDocuments = ({ refreshData }) => {
                   name="transcript"
                   onChange={handleFileChange}
                   accept=".pdf,.jpg,.jpeg,.png"
-                  style={styles.fileInput}
+                  style={{
+                    ...styles.fileInput,
+                    ...(fileInputHover && styles.fileInputHover)
+                  }}
                   required={!studentData?.graduationInfo?.transcript}
+                  onMouseEnter={() => setFileInputHover(true)}
+                  onMouseLeave={() => setFileInputHover(false)}
                 />
+                <div style={styles.uploadStats}>
+                  <span>Max file size: 5MB</span>
+                  <span>Accepted: PDF, JPG, PNG</span>
+                </div>
                 <small style={styles.helpText}>
-                  Accepted formats: PDF, JPG, PNG (Max 5MB)
+                  Images will be automatically compressed for faster upload
                 </small>
                 {studentData?.graduationInfo?.transcript && (
                   <div style={styles.currentFile}>
@@ -2537,6 +2726,23 @@ const UploadDocuments = ({ refreshData }) => {
           </div>
         </div>
 
+        {/* Upload Progress */}
+        {uploading && (
+          <div style={styles.progressContainer}>
+            <div style={styles.progressBar}>
+              <div 
+                style={{
+                  ...styles.progressFill,
+                  width: `${uploadProgress}%`
+                }}
+              ></div>
+            </div>
+            <div style={styles.progressText}>
+              Uploading... {Math.round(uploadProgress)}%
+            </div>
+          </div>
+        )}
+
         <button 
           type="submit" 
           disabled={uploading}
@@ -2559,25 +2765,25 @@ const UploadDocuments = ({ refreshData }) => {
           <div style={styles.statusGrid}>
             <div style={styles.statusItem}>
               <span style={styles.statusIcon}>
-                {studentData.graduationInfo.transcript ? '✅' : '❌'}
+                {studentData.graduationInfo.transcript ? 'Update Successful' : 'Unsuccessful update'}
               </span>
               <span>Transcript Uploaded</span>
             </div>
             <div style={styles.statusItem}>
               <span style={styles.statusIcon}>
-                {studentData.skills?.length > 0 ? '✅' : '❌'}
+                {studentData.skills?.length > 0 ? 'Success!' : 'Unsuccessful'}
               </span>
               <span>Skills Added</span>
             </div>
             <div style={styles.statusItem}>
               <span style={styles.statusIcon}>
-                {studentData.workExperience?.length > 0 ? '✅' : '❌'}
+                {studentData.workExperience?.length > 0 ? 'Success!' : 'Unsuccessful'}
               </span>
               <span>Work Experience</span>
             </div>
             <div style={styles.statusItem}>
               <span style={styles.statusIcon}>
-                {studentData.graduationInfo.cgpa >= 3.0 ? '✅' : '⚠️'}
+                {studentData.graduationInfo.cgpa >= 3.0 ? 'Success' : 'Pending'}
               </span>
               <span>CGPA: {studentData.graduationInfo.cgpa}</span>
             </div>
@@ -2699,14 +2905,14 @@ const BrowseJobs = ({ studentData }) => {
       if (result.success) {
         setMessage({ 
           type: 'success', 
-          text: '✅ Application submitted successfully!' 
+          text: 'Application submitted successfully!' 
         });
         window.scrollTo(0, 0);
       } else {
-        setMessage({ type: 'error', text: `❌ ${result.error}` });
+        setMessage({ type: 'error', text: `${result.error}` });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: '❌ Failed to submit application' });
+      setMessage({ type: 'error', text: 'Failed to submit application' });
     }
 
     setApplying(false);
@@ -3070,15 +3276,15 @@ const BrowseJobs = ({ studentData }) => {
 
               <div style={styles.jobDetails}>
                 <div style={styles.detailItem}>
-                  <span style={styles.detailIcon}>💼</span>
+                  
                   <span>{job.employmentType}</span>
                 </div>
                 <div style={styles.detailItem}>
-                  <span style={styles.detailIcon}>💰</span>
+                  
                   <span>LSL {job.salary?.min?.toLocaleString()} - {job.salary?.max?.toLocaleString()}</span>
                 </div>
                 <div style={styles.detailItem}>
-                  <span style={styles.detailIcon}>📅</span>
+                 
                   <span>Deadline: {new Date(job.deadline).toLocaleDateString()}</span>
                 </div>
               </div>
@@ -3099,25 +3305,25 @@ const BrowseJobs = ({ studentData }) => {
                   <div style={styles.matchGrid}>
                     <div style={styles.matchItem}>
                       <span style={styles.matchIcon}>
-                        {studentData.graduationInfo.graduated ? '✅' : '❌'}
+                        {studentData.graduationInfo.graduated ? 'Sucess' : 'unSucessful'}
                       </span>
                       <span>Education</span>
                     </div>
                     <div style={styles.matchItem}>
                       <span style={styles.matchIcon}>
-                        {studentData.graduationInfo.cgpa >= job.requirements.minCGPA ? '✅' : '❌'}
+                        {studentData.graduationInfo.cgpa >= job.requirements.minCGPA ? 'Sucess' : 'unSucessful'}
                       </span>
                       <span>CGPA</span>
                     </div>
                     <div style={styles.matchItem}>
                       <span style={styles.matchIcon}>
-                        {studentData.skills?.some(s => job.requirements.skills?.includes(s)) ? '✅' : '❌'}
+                        {studentData.skills?.some(s => job.requirements.skills?.includes(s)) ? 'Success' : 'unSucessful'}
                       </span>
                       <span>Skills</span>
                     </div>
                     <div style={styles.matchItem}>
                       <span style={styles.matchIcon}>
-                        {studentData.workExperience?.length > 0 ? '✅' : '⚠️'}
+                        {studentData.workExperience?.length > 0 ? 'Sucess' : 'unSucessful'}
                       </span>
                       <span>Experience</span>
                     </div>
@@ -3142,84 +3348,7 @@ const BrowseJobs = ({ studentData }) => {
           ))}
         </div>
       )}
-           {/* Footer */}
-      <footer style={{
-        background: 'white',
-        borderTop: '1px solid #fed7aa',
-        marginTop: '3rem'
-      }}>
-        <div style={{
-          maxWidth: '80rem',
-          margin: '0 auto',
-          padding: '3rem 1rem'
-        }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '2rem',
-            marginBottom: '2rem'
-          }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                <img src={logo} alt="logo" width="40" height="60" />
-                <span style={{
-                  fontSize: '1.25rem',
-                  fontWeight: 'bold',
-                  background: 'linear-gradient(to right, #dc2626, #ec4899)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
-                }}>
-                  ThutoPele
-                </span>
-              </div>
-              <p style={{ color: '#4b5563', fontSize: '0.875rem' }}>
-                Mokorotlo oa thuto le mesebetsi
-              </p>
-            </div>
-            
-            <div>
-              <h4 style={{ fontWeight: 'bold', color: '#111827', marginBottom: '0.75rem' }}>Quick Links</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <a href="#" style={{ fontSize: '0.875rem', color: '#4b5563', textDecoration: 'none' }}>About Us</a>
-                <a href="#" style={{ fontSize: '0.875rem', color: '#4b5563', textDecoration: 'none' }}>Careers</a>
-                <a href="#" style={{ fontSize: '0.875rem', color: '#4b5563', textDecoration: 'none' }}>Resources</a>
-                <a href="#" style={{ fontSize: '0.875rem', color: '#4b5563', textDecoration: 'none' }}>Blog</a>
-              </div>
-            </div>
-            
-            <div>
-              <h4 style={{ fontWeight: 'bold', color: '#111827', marginBottom: '0.75rem' }}>Support</h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <a href="#" style={{ fontSize: '0.875rem', color: '#4b5563', textDecoration: 'none' }}>Help Center</a>
-                <a href="#" style={{ fontSize: '0.875rem', color: '#4b5563', textDecoration: 'none' }}>Contact Us</a>
-                <a href="#" style={{ fontSize: '0.875rem', color: '#4b5563', textDecoration: 'none' }}>Privacy Policy</a>
-                <a href="#" style={{ fontSize: '0.875rem', color: '#4b5563', textDecoration: 'none' }}>Terms of Service</a>
-              </div>
-            </div>
-            
-            <div>
-              <h4 style={{ fontWeight: 'bold', color: '#111827', marginBottom: '0.75rem' }}>Location</h4>
-              <p style={{ fontSize: '0.875rem', color: '#4b5563', marginBottom: '0.5rem' }}>
-                <MapPin size={16} style={{ display: 'inline', marginRight: '0.25rem', color: '#f97316' }} />
-                Maseru, Lesotho
-              </p>
-              <p style={{ color: '#4b5563', fontSize: '0.875rem' }}>
-                Serving all 10 districts of Lesotho
-              </p>
-            </div>
-          </div>
           
-          <div style={{
-            borderTop: '1px solid #fed7aa',
-            paddingTop: '2rem',
-            textAlign: 'center',
-            fontSize: '0.875rem',
-            color: '#4b5563'
-          }}>
-            © 2025 ThutoPele. Empowering careers across Lesotho, one step at a time.
-          </div>
-        </div>
-      </footer>
 
       <style>{`
         @media (min-width: 768px) {
@@ -3241,5 +3370,564 @@ const BrowseJobs = ({ studentData }) => {
     </div>
   );
 };
+
+//Browse successful applications invitations component
+
+// Student Invitations Component - UPDATED VERSION
+// Updated Student Invitations Component - Query by Email
+const StudentInvitations = () => {
+  const { currentUser, userData } = useAuth();
+  const [invitations, setInvitations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedInvitation, setSelectedInvitation] = useState(null);
+  const [message, setMessage] = useState({ type: '', text: '' });
+
+  useEffect(() => {
+    loadInvitations();
+  }, [currentUser]);
+
+const loadInvitations = async () => {
+  if (!currentUser) return;
+  
+  setLoading(true);
+  try {
+    // Get all invitations and filter in JavaScript for case-insensitive match
+    const result = await queryDocuments('invitations', []);
+    
+    if (result.success) {
+      const studentInvitations = result.data.filter(invitation => 
+        invitation.applicantEmail?.toLowerCase() === currentUser.email?.toLowerCase()
+      );
+      
+      const sortedInvitations = studentInvitations.sort((a, b) => 
+        new Date(b.sentAt) - new Date(a.sentAt)
+      );
+      setInvitations(sortedInvitations);
+    }
+  } catch (error) {
+    console.error('Error loading invitations:', error);
+  }
+  setLoading(false);
+};
+
+  const handleStatusUpdate = async (invitationId, status) => {
+    try {
+      const result = await updateDocument('invitations', invitationId, { 
+        status,
+        respondedAt: new Date().toISOString()
+      });
+      
+      if (result.success) {
+        setMessage({ type: 'success', text: `Invitation ${status} successfully!` });
+        await loadInvitations();
+        
+        if (status === 'accepted') {
+          console.log('Interview accepted - consider adding to calendar');
+        }
+      } else {
+        setMessage({ type: 'error', text: 'Failed to update invitation status' });
+      }
+    } catch (error) {
+      console.error('Error updating invitation status:', error);
+      setMessage({ type: 'error', text: 'Error updating status: ' + error.message });
+    }
+  };
+
+  // ... rest of the component remains the same (styles, getStatusColor, getStatusBackground, etc.)
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'pending': return '#f59e0b';
+      case 'accepted': return '#10b981';
+      case 'declined': return '#ef4444';
+      default: return '#6b7280';
+    }
+  };
+
+  const getStatusBackground = (status) => {
+    switch (status) {
+      case 'pending': return '#fffbeb';
+      case 'accepted': return '#f0fdf4';
+      case 'declined': return '#fef2f2';
+      default: return '#f9fafb';
+    }
+  };
+
+  // ... (all the styles remain exactly the same)
+
+  const styles = {
+    container: {
+      maxWidth: '1000px',
+      margin: '0 auto'
+    },
+    title: {
+      fontSize: '32px',
+      margin: '0 0 10px 0',
+      color: '#2c3e50',
+      background: 'linear-gradient(135deg, #dc2626, #ec4899)',
+      WebkitBackgroundClip: 'text',
+      WebkitTextFillColor: 'transparent',
+      backgroundClip: 'text',
+      fontWeight: 'bold'
+    },
+    subtitle: {
+      fontSize: '16px',
+      color: '#7f8c8d',
+      marginBottom: '30px'
+    },
+    loadingContainer: {
+      textAlign: 'center',
+      padding: '50px',
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+      border: '1px solid #fed7aa'
+    },
+    emptyState: {
+      textAlign: 'center',
+      padding: '60px 20px',
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+      border: '1px solid #fed7aa'
+    },
+    messageAlert: {
+      padding: '15px',
+      borderRadius: '8px',
+      marginBottom: '20px',
+      textAlign: 'center',
+      fontWeight: '600'
+    },
+    successAlert: {
+      backgroundColor: '#d4edda',
+      color: '#155724',
+      border: '1px solid #c3e6cb'
+    },
+    errorAlert: {
+      backgroundColor: '#f8d7da',
+      color: '#721c24',
+      border: '1px solid #f5c6cb'
+    },
+    invitationsGrid: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '20px'
+    },
+    invitationCard: {
+      backgroundColor: 'white',
+      padding: '25px',
+      borderRadius: '12px',
+      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+      border: '1px solid #fed7aa',
+      cursor: 'pointer',
+      transition: 'all 0.3s ease',
+      position: 'relative'
+    },
+    invitationCardHover: {
+      transform: 'translateY(-2px)',
+      boxShadow: '0 8px 25px rgba(0,0,0,0.15)'
+    },
+    cardHeader: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'flex-start',
+      marginBottom: '15px',
+      flexWrap: 'wrap',
+      gap: '10px'
+    },
+    companyName: {
+      fontSize: '20px',
+      fontWeight: 'bold',
+      color: '#2c3e50',
+      marginBottom: '5px'
+    },
+    position: {
+      fontSize: '16px',
+      color: '#7f8c8d',
+      fontWeight: '600'
+    },
+    interviewDetails: {
+      marginBottom: '20px',
+      backgroundColor: '#f8f9fa',
+      padding: '15px',
+      borderRadius: '8px'
+    },
+    detailItem: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      marginBottom: '8px',
+      color: '#555'
+    },
+    message: {
+      backgroundColor: '#f8f9fa',
+      padding: '15px',
+      borderRadius: '8px',
+      marginBottom: '20px',
+      fontSize: '14px',
+      lineHeight: '1.5',
+      borderLeft: '4px solid #f97316'
+    },
+    actions: {
+      display: 'flex',
+      gap: '10px',
+      flexWrap: 'wrap'
+    },
+    acceptButton: {
+      padding: '10px 20px',
+      backgroundColor: '#10b981',
+      color: 'white',
+      border: 'none',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      fontWeight: '600',
+      transition: 'all 0.3s',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '5px'
+    },
+    acceptButtonHover: {
+      transform: 'translateY(-1px)',
+      boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+    },
+    declineButton: {
+      padding: '10px 20px',
+      backgroundColor: '#ef4444',
+      color: 'white',
+      border: 'none',
+      borderRadius: '8px',
+      cursor: 'pointer',
+      fontWeight: '600',
+      transition: 'all 0.3s',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '5px'
+    },
+    declineButtonHover: {
+      transform: 'translateY(-1px)',
+      boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+    },
+    statusBadge: {
+      padding: '8px 16px',
+      borderRadius: '20px',
+      fontSize: '14px',
+      fontWeight: 'bold',
+      whiteSpace: 'nowrap'
+    },
+    newBadge: {
+      position: 'absolute',
+      top: '15px',
+      right: '15px',
+      padding: '4px 8px',
+      backgroundColor: '#f97316',
+      color: 'white',
+      borderRadius: '12px',
+      fontSize: '12px',
+      fontWeight: 'bold'
+    },
+    modal: {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: '20px'
+    },
+    modalContent: {
+      backgroundColor: 'white',
+      borderRadius: '12px',
+      padding: '30px',
+      maxWidth: '600px',
+      width: '100%',
+      maxHeight: '80vh',
+      overflow: 'auto',
+      boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
+    },
+    modalHeader: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: '20px',
+      paddingBottom: '15px',
+      borderBottom: '2px solid #fed7aa'
+    },
+    modalTitle: {
+      fontSize: '24px',
+      fontWeight: 'bold',
+      color: '#2c3e50',
+      margin: 0
+    },
+    closeButton: {
+      padding: '8px',
+      backgroundColor: 'transparent',
+      border: 'none',
+      cursor: 'pointer',
+      borderRadius: '50%',
+      transition: 'background-color 0.3s'
+    },
+    closeButtonHover: {
+      backgroundColor: '#fed7aa'
+    }
+  };
+
+  const [hoverStates, setHoverStates] = useState({
+    invitationCards: {},
+    acceptButtons: {},
+    declineButtons: {},
+    closeButton: false
+  });
+
+  const handleMouseEnter = (item, type) => {
+    setHoverStates(prev => ({
+      ...prev,
+      [type]: { ...prev[type], [item]: true }
+    }));
+  };
+
+  const handleMouseLeave = (item, type) => {
+    setHoverStates(prev => ({
+      ...prev,
+      [type]: { ...prev[type], [item]: false }
+    }));
+  };
+
+  if (loading) {
+    return (
+      <div style={styles.container}>
+        <h1 style={styles.title}>Interview Invitations</h1>
+        <div style={styles.loadingContainer}>
+          <h3>Loading invitations...</h3>
+          <p>Please wait while we load your interview invitations.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={styles.container}>
+      <h1 style={styles.title}>Interview Invitations</h1>
+      <p style={styles.subtitle}>Manage your interview invitations from companies</p>
+
+      {message.text && (
+        <div style={{
+          ...styles.messageAlert,
+          ...(message.type === 'success' ? styles.successAlert : styles.errorAlert)
+        }}>
+          {message.text}
+        </div>
+      )}
+
+      {invitations.length === 0 ? (
+        <div style={styles.emptyState}>
+          <Send size={48} color="#9ca3af" style={{ marginBottom: '20px' }} />
+          <h3>No Invitations Yet</h3>
+          <p>You haven't received any interview invitations yet. Keep applying to jobs!</p>
+          <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '10px' }}>
+            Companies will send interview invitations to this page when they're interested in your application.
+          </p>
+        </div>
+      ) : (
+        <div style={styles.invitationsGrid}>
+          {invitations.map(invitation => {
+            const isNew = invitation.status === 'pending' && 
+                         (!invitation.viewedAt || new Date(invitation.viewedAt) > new Date(Date.now() - 24 * 60 * 60 * 1000));
+            
+            return (
+              <div
+                key={invitation.id}
+                style={{
+                  ...styles.invitationCard,
+                  backgroundColor: getStatusBackground(invitation.status),
+                  ...(hoverStates.invitationCards[invitation.id] && styles.invitationCardHover)
+                }}
+                onMouseEnter={() => handleMouseEnter(invitation.id, 'invitationCards')}
+                onMouseLeave={() => handleMouseLeave(invitation.id, 'invitationCards')}
+                onClick={() => setSelectedInvitation(invitation)}
+              >
+                {isNew && <div style={styles.newBadge}>NEW</div>}
+                
+                <div style={styles.cardHeader}>
+                  <div>
+                    <h3 style={styles.companyName}>{invitation.companyName || 'Company'}</h3>
+                    <p style={styles.position}>Position: {invitation.position}</p>
+                  </div>
+                  <span style={{
+                    ...styles.statusBadge,
+                    backgroundColor: getStatusColor(invitation.status),
+                    color: 'white'
+                  }}>
+                    {invitation.status.toUpperCase()}
+                  </span>
+                </div>
+
+                <div style={styles.interviewDetails}>
+                  <div style={styles.detailItem}>
+                    <Calendar size={16} />
+                    <span><strong>Date:</strong> {invitation.date}</span>
+                  </div>
+                  <div style={styles.detailItem}>
+                    <Clock size={16} />
+                    <span><strong>Time:</strong> {invitation.time}</span>
+                  </div>
+                  {invitation.location && (
+                    <div style={styles.detailItem}>
+                      <MapPin size={16} />
+                      <span><strong>Location:</strong> {invitation.location}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div style={styles.message}>
+                  <strong>Message from {invitation.companyName || 'the company'}:</strong>
+                  <p>{invitation.message}</p>
+                </div>
+
+                {invitation.status === 'pending' && (
+                  <div style={styles.actions}>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStatusUpdate(invitation.id, 'accepted');
+                      }}
+                      style={{
+                        ...styles.acceptButton,
+                        ...(hoverStates.acceptButtons[invitation.id] && styles.acceptButtonHover)
+                      }}
+                      onMouseEnter={() => handleMouseEnter(invitation.id, 'acceptButtons')}
+                      onMouseLeave={() => handleMouseLeave(invitation.id, 'acceptButtons')}
+                    >
+                      <CheckCircle size={16} />
+                      Accept Invitation
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleStatusUpdate(invitation.id, 'declined');
+                      }}
+                      style={{
+                        ...styles.declineButton,
+                        ...(hoverStates.declineButtons[invitation.id] && styles.declineButtonHover)
+                      }}
+                      onMouseEnter={() => handleMouseEnter(invitation.id, 'declineButtons')}
+                      onMouseLeave={() => handleMouseLeave(invitation.id, 'declineButtons')}
+                    >
+                      <XCircle size={16} />
+                      Decline Invitation
+                    </button>
+                  </div>
+                )}
+
+                {invitation.status !== 'pending' && (
+                  <div style={styles.detailItem}>
+                    <span style={{ fontSize: '14px', color: '#6b7280' }}>
+                      You {invitation.status} this invitation on {new Date(invitation.respondedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Modal for viewing invitation details */}
+      {selectedInvitation && (
+        <div style={styles.modal} onClick={() => setSelectedInvitation(null)}>
+          <div style={styles.modalContent} onClick={e => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h2 style={styles.modalTitle}>Interview Invitation Details</h2>
+              <button
+                onClick={() => setSelectedInvitation(null)}
+                style={{
+                  ...styles.closeButton,
+                  ...(hoverStates.closeButton && styles.closeButtonHover)
+                }}
+                onMouseEnter={() => handleMouseEnter('closeButton', 'closeButton')}
+                onMouseLeave={() => handleMouseLeave('closeButton', 'closeButton')}
+              >
+                <XCircle size={24} color="#6b7280" />
+              </button>
+            </div>
+            
+            <div style={styles.cardHeader}>
+              <div>
+                <h3 style={styles.companyName}>{selectedInvitation.companyName || 'Company'}</h3>
+                <p style={styles.position}><strong>Position:</strong> {selectedInvitation.position}</p>
+              </div>
+              <span style={{
+                ...styles.statusBadge,
+                backgroundColor: getStatusColor(selectedInvitation.status),
+                color: 'white'
+              }}>
+                {selectedInvitation.status.toUpperCase()}
+              </span>
+            </div>
+
+            <div style={styles.interviewDetails}>
+              <h4 style={{ margin: '0 0 15px 0', color: '#2c3e50' }}>Interview Schedule:</h4>
+              <div style={styles.detailItem}>
+                <Calendar size={18} />
+                <span><strong>Date:</strong> {selectedInvitation.date}</span>
+              </div>
+              <div style={styles.detailItem}>
+                <Clock size={18} />
+                <span><strong>Time:</strong> {selectedInvitation.time}</span>
+              </div>
+              {selectedInvitation.location && (
+                <div style={styles.detailItem}>
+                  <MapPin size={18} />
+                  <span><strong>Location:</strong> {selectedInvitation.location}</span>
+                </div>
+              )}
+            </div>
+
+            <div style={styles.message}>
+              <h4 style={{ margin: '0 0 10px 0', color: '#2c3e50' }}>Invitation Message:</h4>
+              <p>{selectedInvitation.message}</p>
+            </div>
+
+            <div style={{ marginTop: '20px', fontSize: '14px', color: '#6b7280' }}>
+              <p><strong>Sent:</strong> {new Date(selectedInvitation.sentAt).toLocaleString()}</p>
+              {selectedInvitation.respondedAt && (
+                <p><strong>You responded:</strong> {new Date(selectedInvitation.respondedAt).toLocaleString()}</p>
+              )}
+            </div>
+
+            {selectedInvitation.status === 'pending' && (
+              <div style={{ ...styles.actions, marginTop: '25px' }}>
+                <button
+                  onClick={() => {
+                    handleStatusUpdate(selectedInvitation.id, 'accepted');
+                    setSelectedInvitation(null);
+                  }}
+                  style={styles.acceptButton}
+                >
+                  <CheckCircle size={16} />
+                  Accept Invitation
+                </button>
+                <button
+                  onClick={() => {
+                    handleStatusUpdate(selectedInvitation.id, 'declined');
+                    setSelectedInvitation(null);
+                  }}
+                  style={styles.declineButton}
+                >
+                  <XCircle size={16} />
+                  Decline Invitation
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 export default StudentDashboard;

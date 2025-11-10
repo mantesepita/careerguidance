@@ -107,7 +107,7 @@ const Footer = () => {
     </div>
 
      <div style={styles.footerCopyright}>
-         © 2025 ThutoPele. Empowering careers across Lesotho, one step at a time.
+         &copy; 2025 ThutoPele. Empowering careers across Lesotho & Beyond, one step at a time.
      </div>
     </div>
   </footer>

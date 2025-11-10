@@ -1,23 +1,96 @@
-import React, { useState } from 'react';
-import { Home, Building2, Briefcase, Users, Send, LogOut, Menu, X, Bell, Plus, TrendingUp, Mail, Calendar, FileText, CheckCircle, XCircle,MapPin } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Home, Building2, Briefcase, Users, Send, LogOut, Menu, X, Bell, Plus, TrendingUp, Mail, Calendar, FileText, CheckCircle, XCircle, MapPin } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { getDocument, queryDocuments, createDocument, updateDocument } from '../firebase/helpers';
 import logo from './logo.png';
 import Footer from './Footer';
 
 const CompanyDashboard = () => {
+  const { currentUser } = useAuth();
   const [activePage, setActivePage] = useState('home');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  
-  const companyData = {
-    name: 'Tech Solutions Inc.',
-    email: 'hr@techsolutions.com',
-    industry: 'Technology'
+  const [companyData, setCompanyData] = useState({
+    name: '',
+    email: '',
+    industry: ''
+  });
+  const [stats, setStats] = useState({
+    activeJobs: 0,
+    totalApplicants: 0,
+    shortlisted: 0,
+    invitationsSent: 0
+  });
+
+  useEffect(() => {
+    if (currentUser) {
+      loadCompanyData();
+    }
+  }, [currentUser]);
+
+  const loadCompanyData = async () => {
+    if (!currentUser) return;
+
+    try {
+      // Load company profile
+      const companyResult = await getDocument('companies', currentUser.uid);
+      if (companyResult.success && companyResult.data) {
+        setCompanyData({
+          name: companyResult.data.name || '',
+          email: companyResult.data.email || currentUser.email,
+          industry: companyResult.data.industry || ''
+        });
+      } else {
+        setCompanyData({
+          name: '',
+          email: currentUser.email,
+          industry: ''
+        });
+      }
+
+      // Load stats
+      await loadStats();
+    } catch (error) {
+      console.error('Error loading company data:', error);
+    }
   };
 
-  const stats = {
-    activeJobs: 12,
-    totalApplicants: 156,
-    shortlisted: 32,
-    invitationsSent: 45
+  const loadStats = async () => {
+    try {
+      // Load active jobs count
+      const jobsResult = await queryDocuments('jobs', [
+        { field: 'companyId', operator: '==', value: currentUser.uid },
+        { field: 'status', operator: '==', value: 'active' }
+      ]);
+      const activeJobs = jobsResult.success ? jobsResult.data.length : 0;
+
+      // Load total applicants
+      const applicationsResult = await queryDocuments('jobApplications', [
+        { field: 'companyId', operator: '==', value: currentUser.uid }
+      ]);
+      const totalApplicants = applicationsResult.success ? applicationsResult.data.length : 0;
+
+      // Load shortlisted applicants
+      const shortlistedResult = await queryDocuments('jobApplications', [
+        { field: 'companyId', operator: '==', value: currentUser.uid },
+        { field: 'status', operator: '==', value: 'shortlisted' }
+      ]);
+      const shortlisted = shortlistedResult.success ? shortlistedResult.data.length : 0;
+
+      // Load invitations sent
+      const invitationsResult = await queryDocuments('invitations', [
+        { field: 'companyId', operator: '==', value: currentUser.uid }
+      ]);
+      const invitationsSent = invitationsResult.success ? invitationsResult.data.length : 0;
+
+      setStats({
+        activeJobs,
+        totalApplicants,
+        shortlisted,
+        invitationsSent
+      });
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
   };
 
   const navigation = [
@@ -31,21 +104,21 @@ const CompanyDashboard = () => {
   const renderContent = () => {
     switch(activePage) {
       case 'home':
-        return <HomePage companyData={companyData} stats={stats} setActivePage={setActivePage} />;
+        return <HomePage companyData={companyData} stats={stats} setActivePage={setActivePage} refreshData={loadStats} />;
       case 'profile':
-        return <ProfilePage />;
+        return <ProfilePage refreshData={loadCompanyData} />;
       case 'postJob':
-        return <PostJobPage />;
+        return <PostJobPage refreshData={loadStats} />;
       case 'applicants':
         return <ApplicantsPage stats={stats} />;
       case 'invitations':
-        return <InvitationsPage />;
+        return <InvitationsPage refreshData={loadStats} />;
       default:
-        return <HomePage companyData={companyData} stats={stats} setActivePage={setActivePage} />;
+      return <HomePage companyData={companyData} stats={stats} setActivePage={setActivePage} refreshData={loadStats} />;
     }
   };
 
-  // Inline styles
+  // Inline styles (same as before)
   const styles = {
     container: {
       minHeight: '100vh',
@@ -312,7 +385,7 @@ const CompanyDashboard = () => {
               </button>
               <div style={styles.userSection}>
                 <div style={{ textAlign: 'right' }}>
-                  <p style={styles.userName}>{companyData.name}</p>
+                  <p style={styles.userName}>{companyData.name || 'Company'}</p>
                   <p style={styles.userRole}>Company</p>
                 </div>
                 <button 
@@ -426,7 +499,57 @@ const CompanyDashboard = () => {
   );
 };
 
-const HomePage = ({ companyData, stats, setActivePage }) => {
+// Updated HomePage with real data
+const HomePage = ({ companyData, stats, setActivePage, refreshData }) => {
+  const { currentUser } = useAuth();
+  const [recentActivity, setRecentActivity] = useState([]);
+
+  useEffect(() => {
+    loadRecentActivity();
+  }, [currentUser]);
+
+  const loadRecentActivity = async () => {
+    if (!currentUser) return;
+
+    try {
+      // Load recent job applications
+      const applicationsResult = await queryDocuments('jobApplications', [
+        { field: 'companyId', operator: '==', value: currentUser.uid }
+      ], { field: 'appliedAt', direction: 'desc' }, 5);
+
+      if (applicationsResult.success) {
+        const activities = await Promise.all(
+          applicationsResult.data.map(async (app) => {
+            // Get student name
+            const studentResult = await getDocument('students', app.studentId);
+            const studentName = studentResult.success && studentResult.data 
+              ? `${studentResult.data.firstName} ${studentResult.data.lastName}`
+              : 'A student';
+
+            // Get job title
+            const jobResult = await getDocument('jobs', app.jobId);
+            const jobTitle = jobResult.success && jobResult.data 
+              ? jobResult.data.title
+              : 'a position';
+
+            return {
+              key: app.id,
+              title: `${studentName} applied for ${jobTitle}`,
+              description: `Match score: ${app.matchScore || 0}%`,
+              time: new Date(app.appliedAt).toLocaleDateString(),
+              icon: Users,
+              color: '#3b82f6',
+              background: '#f7eae1d4'
+            };
+          })
+        );
+        setRecentActivity(activities);
+      }
+    } catch (error) {
+      console.error('Error loading recent activity:', error);
+    }
+  };
+
   const styles = {
     container: {
       display: 'flex',
@@ -647,7 +770,7 @@ const HomePage = ({ companyData, stats, setActivePage }) => {
       icon: Briefcase, 
       iconColor: 'white',
       gradient: 'linear-gradient(135deg, #f97316, #ec4899)',
-      trend: { color: '#16a34a', text: '+2 this week' }
+      trend: { color: '#16a34a', text: 'Active positions' }
     },
     { 
       key: 'totalApplicants', 
@@ -656,7 +779,7 @@ const HomePage = ({ companyData, stats, setActivePage }) => {
       icon: Users, 
       iconColor: 'white',
       gradient: 'linear-gradient(135deg, #f97316, #ec4899)',
-      trend: { color: '#2563eb', text: '+15 this week' }
+      trend: { color: '#2563eb', text: 'All applications' }
     },
     { 
       key: 'shortlisted', 
@@ -674,37 +797,7 @@ const HomePage = ({ companyData, stats, setActivePage }) => {
       icon: Send, 
       iconColor: 'white',
       gradient: 'linear-gradient(135deg, #f97316, #ec4899)',
-      trend: { color: '#ea580c', text: '+8 this week' }
-    }
-  ];
-
-  const activities = [
-    {
-      key: 'applications',
-      title: '15 new applications received',
-      description: 'For Senior Developer position',
-      time: '2 hours ago',
-      icon: Users,
-      color: '#3b82f6',
-      background: '#f7eae1d4'
-    },
-    {
-      key: 'invitations',
-      title: 'Interview invitation sent',
-      description: 'To 5 shortlisted candidates',
-      time: '5 hours ago',
-      icon: Send,
-      color: '#10b981',
-      background: '#f7eae1d4'
-    },
-    {
-      key: 'jobPost',
-      title: 'New job post published',
-      description: 'Marketing Manager position',
-      time: '1 day ago',
-      icon: Briefcase,
-      color: '#8b5cf6',
-      background: '#f7eae1d4'
+      trend: { color: '#ea580c', text: 'Interview invites' }
     }
   ];
 
@@ -743,7 +836,7 @@ const HomePage = ({ companyData, stats, setActivePage }) => {
         <div style={styles.welcomeBlob2}></div>
         <div style={styles.welcomeContent}>
           <h1 style={styles.welcomeTitle}>Welcome back! </h1>
-          <p style={styles.welcomeSubtitle}>{companyData.name}</p>
+          <p style={styles.welcomeSubtitle}>{companyData.name || 'Company Portal'}</p>
         </div>
       </div>
 
@@ -781,27 +874,31 @@ const HomePage = ({ companyData, stats, setActivePage }) => {
       <div style={styles.recentActivity}>
         <h2 style={styles.sectionTitle}>Recent Activity</h2>
         <div style={styles.activityList}>
-          {activities.map((activity) => {
-            const Icon = activity.icon;
-            return (
-              <div
-                key={activity.key}
-                style={{
-                  ...styles.activityItem,
-                  background: activity.background
-                }}
-              >
-                <div style={{ ...styles.activityIcon, backgroundColor: activity.color }}>
-                  <Icon size={20} color="white" />
+          {recentActivity.length > 0 ? (
+            recentActivity.map((activity) => {
+              const Icon = activity.icon;
+              return (
+                <div
+                  key={activity.key}
+                  style={{
+                    ...styles.activityItem,
+                    background: activity.background
+                  }}
+                >
+                  <div style={{ ...styles.activityIcon, backgroundColor: activity.color }}>
+                    <Icon size={20} color="white" />
+                  </div>
+                  <div style={styles.activityContent}>
+                    <p style={styles.activityTitle}>{activity.title}</p>
+                    <p style={styles.activityDescription}>{activity.description}</p>
+                  </div>
+                  <span style={styles.activityTime}>{activity.time}</span>
                 </div>
-                <div style={styles.activityContent}>
-                  <p style={styles.activityTitle}>{activity.title}</p>
-                  <p style={styles.activityDescription}>{activity.description}</p>
-                </div>
-                <span style={styles.activityTime}>{activity.time}</span>
-              </div>
-            );
-          })}
+              );
+            })
+          ) : (
+            <p style={{ textAlign: 'center', color: '#6b7280' }}>No recent activity</p>
+          )}
         </div>
       </div>
 
@@ -844,26 +941,79 @@ const HomePage = ({ companyData, stats, setActivePage }) => {
   );
 };
 
-const ProfilePage = () => {
+// Updated ProfilePage with Firebase integration
+const ProfilePage = ({ refreshData }) => {
+  const { currentUser } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState('');
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
-    name: 'Tech Solutions Inc.',
-    industry: 'Technology',
-    location: 'Maseru, Lesotho',
-    contactEmail: 'hr@techsolutions.com',
-    website: 'www.techsolutions.com',
-    description: 'Leading technology solutions provider in Lesotho, specializing in software development and IT consulting services.'
+    name: '',
+    industry: '',
+    location: '',
+    contactEmail: '',
+    website: '',
+    description: ''
   });
-  const [message, setMessage] = useState('');
+
+  useEffect(() => {
+    loadCompanyProfile();
+  }, [currentUser]);
+
+  const loadCompanyProfile = async () => {
+    if (currentUser) {
+      const result = await getDocument('companies', currentUser.uid);
+      if (result.success && result.data) {
+        setFormData({
+          name: result.data.name || '',
+          industry: result.data.industry || '',
+          location: result.data.location || '',
+          contactEmail: result.data.contactEmail || '',
+          website: result.data.website || '',
+          description: result.data.description || ''
+        });
+      }
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage('✅ Profile updated successfully!');
-    setTimeout(() => setMessage(''), 3000);
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const profileData = {
+        ...formData,
+        email: currentUser.email,
+        lastUpdated: new Date().toISOString()
+      };
+
+      const existingProfile = await getDocument('companies', currentUser.uid);
+      
+      let result;
+      if (existingProfile.success && existingProfile.data) {
+        result = await updateDocument('companies', currentUser.uid, profileData);
+      } else {
+        result = await createDocument('companies', { ...profileData, id: currentUser.uid });
+      }
+
+      if (result.success) {
+        setSuccess('Company profile saved successfully!');
+        if (refreshData) refreshData();
+      } else {
+        setError('Failed to save profile: ' + (result.error || 'Unknown error'));
+      }
+    } catch (err) {
+      setError('Failed to save profile: ' + err.message);
+    }
+
+    setLoading(false);
   };
 
   const styles = {
@@ -885,6 +1035,14 @@ const ProfilePage = () => {
       padding: '0.75rem',
       backgroundColor: '#dcfce7',
       color: '#16a34a',
+      borderRadius: '0.5rem',
+      marginBottom: '1rem',
+      textAlign: 'center'
+    },
+    errorMessage: {
+      padding: '0.75rem',
+      backgroundColor: '#f8d7da',
+      color: '#721c24',
       borderRadius: '0.5rem',
       marginBottom: '1rem',
       textAlign: 'center'
@@ -911,10 +1069,6 @@ const ProfilePage = () => {
       fontSize: '1rem',
       transition: 'all 0.3s ease'
     },
-    inputFocus: {
-      borderColor: '#f97316',
-      boxShadow: '0 0 0 3px rgba(249, 115, 22, 0.1)'
-    },
     textarea: {
       padding: '0.75rem',
       borderRadius: '0.5rem',
@@ -939,17 +1093,20 @@ const ProfilePage = () => {
     buttonHover: {
       transform: 'scale(1.05)',
       boxShadow: '0 6px 20px rgba(249, 115, 22, 0.4)'
+    },
+    buttonDisabled: {
+      opacity: 0.7,
+      cursor: 'not-allowed'
     }
   };
 
-  const [hoverStates, setHoverStates] = useState({
-    button: false
-  });
+  const [buttonHover, setButtonHover] = useState(false);
 
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>Company Profile</h2>
-      {message && <div style={styles.message}>{message}</div>}
+      {success && <div style={styles.message}>{success}</div>}
+      {error && <div style={styles.errorMessage}>{error}</div>}
       
       <form onSubmit={handleSubmit} style={styles.form}>
         <div style={styles.inputGroup}>
@@ -1011,7 +1168,6 @@ const ProfilePage = () => {
               value={formData.website}
               onChange={handleChange}
               style={styles.input}
-              required
             />
           </div>
         </div>
@@ -1029,21 +1185,27 @@ const ProfilePage = () => {
 
         <button
           type="submit"
+          disabled={loading}
           style={{
             ...styles.button,
-            ...(hoverStates.button && styles.buttonHover)
+            ...(buttonHover && styles.buttonHover),
+            ...(loading && styles.buttonDisabled)
           }}
-          onMouseEnter={() => setHoverStates({ button: true })}
-          onMouseLeave={() => setHoverStates({ button: false })}
+          onMouseEnter={() => setButtonHover(true)}
+          onMouseLeave={() => setButtonHover(false)}
         >
-          Update Profile
+          {loading ? 'Saving...' : 'Update Profile'}
         </button>
       </form>
     </div>
   );
 };
 
-const PostJobPage = () => {
+// Updated PostJobPage with Firebase integration
+const PostJobPage = ({ refreshData }) => {
+  const { currentUser } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -1052,29 +1214,61 @@ const PostJobPage = () => {
     salary: '',
     deadline: '',
     location: 'Maseru, Lesotho',
-    type: 'Full-time'
+    type: 'Full-time',
+    status: 'active'
   });
-  const [message, setMessage] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage('✅ Job posted successfully!');
-    setFormData({
-      title: '',
-      description: '',
-      requirements: '',
-      qualifications: '',
-      salary: '',
-      deadline: '',
-      location: 'Maseru, Lesotho',
-      type: 'Full-time'
-    });
-    setTimeout(() => setMessage(''), 3000);
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const jobData = {
+        ...formData,
+        companyId: currentUser.uid,
+        createdAt: new Date().toISOString(),
+        salary: {
+          min: parseInt(formData.salary.split('-')[0]?.replace('M', '').replace(',', '').trim()) || 0,
+          max: parseInt(formData.salary.split('-')[1]?.replace('M', '').replace(',', '').trim()) || 0
+        },
+        requirements: {
+          education: 'Bachelor Degree',
+          minCGPA: 3.0,
+          experience: '2+ years',
+          skills: formData.requirements.split(',').map(s => s.trim()).filter(s => s)
+        }
+      };
+
+      const result = await createDocument('jobs', jobData);
+
+      if (result.success) {
+        setMessage('Job posted successfully!');
+        setFormData({
+          title: '',
+          description: '',
+          requirements: '',
+          qualifications: '',
+          salary: '',
+          deadline: '',
+          location: 'Maseru, Lesotho',
+          type: 'Full-time',
+          status: 'active'
+        });
+        if (refreshData) refreshData();
+      } else {
+        setMessage('Failed to post job: ' + (result.error || 'Unknown error'));
+      }
+    } catch (error) {
+      setMessage('Failed to post job: ' + error.message);
+    }
+
+    setLoading(false);
   };
 
   const styles = {
@@ -1096,6 +1290,14 @@ const PostJobPage = () => {
       padding: '0.75rem',
       backgroundColor: '#dcfce7',
       color: '#16a34a',
+      borderRadius: '0.5rem',
+      marginBottom: '1rem',
+      textAlign: 'center'
+    },
+    errorMessage: {
+      padding: '0.75rem',
+      backgroundColor: '#f8d7da',
+      color: '#721c24',
       borderRadius: '0.5rem',
       marginBottom: '1rem',
       textAlign: 'center'
@@ -1154,6 +1356,10 @@ const PostJobPage = () => {
       transform: 'scale(1.05)',
       boxShadow: '0 6px 20px rgba(249, 115, 22, 0.4)'
     },
+    buttonDisabled: {
+      opacity: 0.7,
+      cursor: 'not-allowed'
+    },
     grid: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
@@ -1161,14 +1367,16 @@ const PostJobPage = () => {
     }
   };
 
-  const [hoverStates, setHoverStates] = useState({
-    button: false
-  });
+  const [buttonHover, setButtonHover] = useState(false);
 
   return (
     <div style={styles.container}>
       <h2 style={styles.title}>Post New Job</h2>
-      {message && <div style={styles.message}>{message}</div>}
+      {message && (
+        <div style={message.includes('Failed') ? styles.errorMessage : styles.message}>
+          {message}
+        </div>
+      )}
       
       <form onSubmit={handleSubmit} style={styles.form}>
         <div style={styles.inputGroup}>
@@ -1265,82 +1473,108 @@ const PostJobPage = () => {
         </div>
 
         <div style={styles.inputGroup}>
-          <label style={styles.label}>Additional Requirements</label>
+          <label style={styles.label}>Required Skills (comma separated)</label>
           <textarea
             name="requirements"
             value={formData.requirements}
             onChange={handleChange}
             style={styles.textarea}
-            placeholder="Any additional requirements or preferences..."
+            placeholder="JavaScript, React, Node.js, Python..."
           />
         </div>
 
         <button
           type="submit"
+          disabled={loading}
           style={{
             ...styles.button,
-            ...(hoverStates.button && styles.buttonHover)
+            ...(buttonHover && styles.buttonHover),
+            ...(loading && styles.buttonDisabled)
           }}
-          onMouseEnter={() => setHoverStates({ button: true })}
-          onMouseLeave={() => setHoverStates({ button: false })}
+          onMouseEnter={() => setButtonHover(true)}
+          onMouseLeave={() => setButtonHover(false)}
         >
-          Post Job
+          {loading ? 'Posting...' : 'Post Job'}
         </button>
       </form>
     </div>
   );
 };
 
+// Updated ApplicantsPage with real data
 const ApplicantsPage = ({ stats }) => {
-  const [applicants, setApplicants] = useState([
-    {
-      id: 1,
-      name: 'Thabo Moloi',
-      qualification: 'Bachelor of Science',
-      course: 'Computer Science',
-      status: 'Shortlisted',
-      gpa: 3.8,
-      experience: '2 years',
-      certificates: ['React Certified', 'AWS Certified'],
-      matchScore: 95
-    },
-    {
-      id: 2,
-      name: 'Matseliso Mokoena',
-      qualification: 'Diploma',
-      course: 'Information Technology',
-      status: 'Pending',
-      gpa: 3.2,
-      experience: '1 year',
-      certificates: ['Java Certified'],
-      matchScore: 78
-    },
-    {
-      id: 3,
-      name: 'Teboho Phakoe',
-      qualification: 'Bachelor Degree',
-      course: 'Software Engineering',
-      status: 'Rejected',
-      gpa: 2.9,
-      experience: 'No experience',
-      certificates: [],
-      matchScore: 45
-    }
-  ]);
-
+  const { currentUser } = useAuth();
+  const [applicants, setApplicants] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [selectedApplicant, setSelectedApplicant] = useState(null);
+
+  useEffect(() => {
+    loadApplicants();
+  }, [currentUser]);
+
+  const loadApplicants = async () => {
+    setLoading(true);
+    try {
+      const applicationsResult = await queryDocuments('jobApplications', [
+        { field: 'companyId', operator: '==', value: currentUser.uid }
+      ]);
+
+      if (applicationsResult.success) {
+        const applicantsWithDetails = await Promise.all(
+          applicationsResult.data.map(async (app) => {
+            // Get student details
+            const studentResult = await getDocument('students', app.studentId);
+            const student = studentResult.success ? studentResult.data : null;
+            
+            // Get job details
+            const jobResult = await getDocument('jobs', app.jobId);
+            const job = jobResult.success ? jobResult.data : null;
+
+            return {
+              id: app.id,
+              name: student ? `${student.firstName} ${student.lastName}` : 'Unknown Student',
+              qualification: student?.graduationInfo?.graduated ? 'Graduate' : 'Student',
+              course: student?.graduationInfo?.graduated ? 'Graduated' : 'Current Student',
+              status: app.status || 'pending',
+              gpa: student?.graduationInfo?.cgpa || 'N/A',
+              experience: student?.workExperience?.length > 0 ? `${student.workExperience.length} positions` : 'No experience',
+              certificates: student?.skills || [],
+              matchScore: app.matchScore || 0,
+              studentData: student,
+              jobData: job
+            };
+          })
+        );
+        setApplicants(applicantsWithDetails);
+      }
+    } catch (error) {
+      console.error('Error loading applicants:', error);
+    }
+    setLoading(false);
+  };
+
+  const handleStatusChange = async (applicantId, newStatus) => {
+    try {
+      const result = await updateDocument('jobApplications', applicantId, {
+        status: newStatus
+      });
+
+      if (result.success) {
+        // Update local state
+        setApplicants(prev => prev.map(app => 
+          app.id === applicantId ? { ...app, status: newStatus } : app
+        ));
+      }
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
+  };
 
   const filteredApplicants = applicants.filter(applicant => {
     if (filter === 'all') return true;
     return applicant.status.toLowerCase() === filter;
   });
-
-  const handleStatusChange = (applicantId, newStatus) => {
-    setApplicants(prev => prev.map(app => 
-      app.id === applicantId ? { ...app, status: newStatus } : app
-    ));
-  };
 
   const styles = {
     container: {
@@ -1467,10 +1701,6 @@ const ApplicantsPage = ({ stats }) => {
       backgroundColor: '#fee2e2',
       color: '#dc2626'
     },
-    buttonInvite: {
-      backgroundColor: '#dbeafe',
-      color: '#2563eb'
-    },
     modal: {
       position: 'fixed',
       top: 0,
@@ -1496,6 +1726,23 @@ const ApplicantsPage = ({ stats }) => {
 
   const [hoverStates, setHoverStates] = useState({});
 
+  if (loading) {
+    return (
+      <div style={styles.container}>
+        <div style={{
+          backgroundColor: 'white',
+          borderRadius: '1rem',
+          padding: '2rem',
+          border: '1px solid #fed7aa',
+          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+          textAlign: 'center'
+        }}>
+          <h2>Loading applicants...</h2>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={styles.container}>
       <div style={{
@@ -1506,12 +1753,12 @@ const ApplicantsPage = ({ stats }) => {
         boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
       }}>
         <div style={styles.header}>
-          <h2 style={styles.title}>Qualified Applicants</h2>
+          <h2 style={styles.title}>Job Applicants</h2>
           <span style={styles.badge}>{stats.totalApplicants} Total Applicants</span>
         </div>
 
         <div style={styles.filters}>
-          {['all', 'shortlisted', 'pending', 'rejected'].map(status => (
+          {['all', 'pending', 'shortlisted', 'rejected'].map(status => (
             <button
               key={status}
               onClick={() => setFilter(status)}
@@ -1541,10 +1788,10 @@ const ApplicantsPage = ({ stats }) => {
                 <div>
                   <h3 style={styles.applicantName}>{applicant.name}</h3>
                   <p style={styles.applicantDetails}>
-                    {applicant.qualification} in {applicant.course} • GPA: {applicant.gpa} • {applicant.experience} experience
+                    {applicant.qualification} • GPA: {applicant.gpa} • {applicant.experience}
                   </p>
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    {applicant.certificates.map((cert, index) => (
+                    {applicant.certificates.slice(0, 3).map((cert, index) => (
                       <span key={index} style={{
                         padding: '0.25rem 0.5rem',
                         backgroundColor: '#f3f4f6',
@@ -1555,6 +1802,17 @@ const ApplicantsPage = ({ stats }) => {
                         {cert}
                       </span>
                     ))}
+                    {applicant.certificates.length > 3 && (
+                      <span style={{
+                        padding: '0.25rem 0.5rem',
+                        backgroundColor: '#f3f4f6',
+                        borderRadius: '0.375rem',
+                        fontSize: '0.75rem',
+                        color: '#374151'
+                      }}>
+                        +{applicant.certificates.length - 3} more
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' }}>
@@ -1572,7 +1830,7 @@ const ApplicantsPage = ({ stats }) => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleStatusChange(applicant.id, 'Shortlisted');
+                    handleStatusChange(applicant.id, 'shortlisted');
                   }}
                   style={{ ...styles.actionButton, ...styles.buttonShortlist }}
                 >
@@ -1582,7 +1840,7 @@ const ApplicantsPage = ({ stats }) => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    handleStatusChange(applicant.id, 'Rejected');
+                    handleStatusChange(applicant.id, 'rejected');
                   }}
                   style={{ ...styles.actionButton, ...styles.buttonReject }}
                 >
@@ -1593,6 +1851,12 @@ const ApplicantsPage = ({ stats }) => {
             </div>
           ))}
         </div>
+
+        {filteredApplicants.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+            No applicants found for the selected filter.
+          </div>
+        )}
       </div>
 
       {selectedApplicant && (
@@ -1604,9 +1868,23 @@ const ApplicantsPage = ({ stats }) => {
             </p>
             <p>GPA: {selectedApplicant.gpa}</p>
             <p>Experience: {selectedApplicant.experience}</p>
-            <p>Certificates: {selectedApplicant.certificates.join(', ')}</p>
+            <p>Skills: {selectedApplicant.certificates.join(', ')}</p>
             <p>Match Score: {selectedApplicant.matchScore}%</p>
-            <button onClick={() => setSelectedApplicant(null)}>Close</button>
+            <p>Status: {selectedApplicant.status}</p>
+            <button 
+              onClick={() => setSelectedApplicant(null)}
+              style={{
+                marginTop: '1rem',
+                padding: '0.5rem 1rem',
+                backgroundColor: '#f97316',
+                color: 'white',
+                border: 'none',
+                borderRadius: '0.5rem',
+                cursor: 'pointer'
+              }}
+            >
+              Close
+            </button>
           </div>
         </div>
       )}
@@ -1614,60 +1892,98 @@ const ApplicantsPage = ({ stats }) => {
   );
 };
 
-const InvitationsPage = () => {
+// Updated InvitationsPage with real data
+// Updated InvitationsPage with companyData
+const InvitationsPage = ({ refreshData, companyData }) => {
+  const { currentUser } = useAuth();
   const [formData, setFormData] = useState({
     applicantEmail: '',
     message: '',
     date: '',
     time: '',
-    position: ''
+    position: '' ,
+    location:'Office-To be confirmed'
+    
   });
-  const [status, setStatus] = useState('');
-  const [sentInvitations, setSentInvitations] = useState([
-    {
-      id: 1,
-      applicantEmail: 'thabo.moloi@email.com',
-      position: 'Senior Developer',
-      date: '2024-02-15',
-      time: '14:00',
-      status: 'Pending'
-    },
-    {
-      id: 2,
-      applicantEmail: 'matseliso.m@email.com',
-      position: 'Junior Developer',
-      date: '2024-02-14',
-      time: '10:30',
-      status: 'Accepted'
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [sentInvitations, setSentInvitations] = useState([]);
+
+  useEffect(() => {
+    loadInvitations();
+  }, [currentUser]);
+
+ const loadInvitations = async () => {
+  try {
+    const result = await queryDocuments('invitations', [
+      { field: 'companyId', operator: '==', value: currentUser.uid }
+    ]);
+
+    if (result.success) {
+      // Sort in JavaScript
+      const sortedInvitations = result.data.sort((a, b) => 
+        new Date(b.sentAt) - new Date(a.sentAt)
+      );
+      setSentInvitations(sortedInvitations);
     }
-  ]);
+  } catch (error) {
+    console.error('Error loading invitations:', error);
+  }
+};
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setStatus('✅ Invitation sent successfully!');
-    setSentInvitations(prev => [...prev, {
-      id: prev.length + 1,
-      applicantEmail: formData.applicantEmail,
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setMessage('');
+
+  try {
+    // Get company data first
+    const companyResult = await getDocument('companies', currentUser.uid);
+    const companyName = companyResult.success && companyResult.data 
+      ? companyResult.data.name 
+      : 'Our Company';
+
+    const invitationData = {
+      applicantEmail: formData.applicantEmail,  
       position: formData.position,
+      message: formData.message,
       date: formData.date,
       time: formData.time,
-      status: 'Pending'
-    }]);
-    setFormData({
-      applicantEmail: '',
-      message: '',
-      date: '',
-      time: '',
-      position: ''
-    });
-    setTimeout(() => setStatus(''), 3000);
-  };
+      location: formData.location || 'To be confirmed',
+      companyId: currentUser.uid,
+      companyName: companyName,
+      sentAt: new Date().toISOString(),
+      status: 'pending'
+    };
 
+    const result = await createDocument('invitations', invitationData);
+
+    if (result.success) {
+      setMessage('Invitation sent successfully!');
+      setFormData({
+        applicantEmail: '',
+        message: '',
+        date: '',
+        time: '',
+        position: '',
+        location: ''
+      });
+      await loadInvitations();
+      if (refreshData) refreshData();
+    } else {
+      setMessage('Failed to send invitation: ' + (result.error || 'Unknown error'));
+    }
+  } catch (error) {
+    setMessage('Failed to send invitation: ' + error.message);
+  }
+
+  setLoading(false);
+};
   const styles = {
     container: {
       display: 'flex',
@@ -1699,6 +2015,14 @@ const InvitationsPage = () => {
       padding: '0.75rem',
       backgroundColor: '#dcfce7',
       color: '#16a34a',
+      borderRadius: '0.5rem',
+      marginBottom: '1rem',
+      textAlign: 'center'
+    },
+    errorMessage: {
+      padding: '0.75rem',
+      backgroundColor: '#f8d7da',
+      color: '#721c24',
       borderRadius: '0.5rem',
       marginBottom: '1rem',
       textAlign: 'center'
@@ -1749,6 +2073,10 @@ const InvitationsPage = () => {
     buttonHover: {
       transform: 'scale(1.05)',
       boxShadow: '0 6px 20px rgba(249, 115, 22, 0.4)'
+    },
+    buttonDisabled: {
+      opacity: 0.7,
+      cursor: 'not-allowed'
     },
     grid: {
       display: 'grid',
@@ -1802,15 +2130,17 @@ const InvitationsPage = () => {
     }
   };
 
-  const [hoverStates, setHoverStates] = useState({
-    button: false
-  });
+  const [buttonHover, setButtonHover] = useState(false);
 
   return (
     <div style={styles.container}>
       <div style={styles.formCard}>
         <h2 style={styles.title}>Send Interview Invitation</h2>
-        {status && <div style={styles.message}>{status}</div>}
+        {message && (
+          <div style={message.includes('Failed') ? styles.errorMessage : styles.message}>
+            {message}
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} style={styles.form}>
           <div style={styles.grid}>
@@ -1839,6 +2169,18 @@ const InvitationsPage = () => {
                 required
               />
             </div>
+          </div>
+
+          <div style={styles.inputGroup}>
+            <label style={styles.label}>Interview Location</label>
+            <input
+              type="text"
+              name="location"
+              placeholder="e.g., Main Office, Conference Room A"
+              value={formData.location}
+              onChange={handleChange}
+              style={styles.input}
+            />
           </div>
 
           <div style={styles.grid}>
@@ -1881,15 +2223,17 @@ const InvitationsPage = () => {
 
           <button
             type="submit"
+            disabled={loading}
             style={{
               ...styles.button,
-              ...(hoverStates.button && styles.buttonHover)
+              ...(buttonHover && styles.buttonHover),
+              ...(loading && styles.buttonDisabled)
             }}
-            onMouseEnter={() => setHoverStates({ button: true })}
-            onMouseLeave={() => setHoverStates({ button: false })}
+            onMouseEnter={() => setButtonHover(true)}
+            onMouseLeave={() => setButtonHover(false)}
           >
             <Send size={16} style={{ marginRight: '0.5rem' }} />
-            Send Invitation
+            {loading ? 'Sending...' : 'Send Invitation'}
           </button>
         </form>
       </div>
@@ -1897,42 +2241,30 @@ const InvitationsPage = () => {
       <div style={styles.invitationsCard}>
         <h3 style={styles.title}>Sent Invitations</h3>
         <div style={styles.invitationsList}>
-          {sentInvitations.map(invitation => (
-            <div key={invitation.id} style={styles.invitationItem}>
-              <div style={styles.invitationDetails}>
-                <span style={styles.invitationEmail}>{invitation.applicantEmail}</span>
-                <span style={styles.invitationMeta}>
-                  {invitation.position} • {invitation.date} at {invitation.time}
+          {sentInvitations.length > 0 ? (
+            sentInvitations.map(invitation => (
+              <div key={invitation.id} style={styles.invitationItem}>
+                <div style={styles.invitationDetails}>
+                  <span style={styles.invitationEmail}>{invitation.applicantEmail}</span>
+                  <span style={styles.invitationMeta}>
+                    {invitation.position} • {invitation.date} at {invitation.time}
+                  </span>
+                </div>
+                <span style={{
+                  ...styles.statusBadge,
+                  ...styles[`status${invitation.status}`]
+                }}>
+                  {invitation.status}
                 </span>
               </div>
-              <span style={{
-                ...styles.statusBadge,
-                ...styles[`status${invitation.status}`]
-              }}>
-                {invitation.status}
-              </span>
+            ))
+          ) : (
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+              No invitations sent yet.
             </div>
-          ))}
+          )}
         </div>
       </div>
-
-      <style>{`
-        @media (min-width: 768px) {
-          .desktop-nav { display: flex !important; }
-          .sidebar { display: block !important; }
-          .mobile-menu-button { display: none !important; }
-        }
-        
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease-out;
-        }
-      `}</style>
-      <Footer/>
     </div>
   );
 };

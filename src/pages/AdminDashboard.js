@@ -1790,11 +1790,15 @@ const InstitutionsPage = ({ stats, refreshStats }) => {
 };
 
 // CompaniesPage Component
+// CompaniesPage Component
 const CompaniesPage = ({ stats, refreshStats }) => {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [hoverStates, setHoverStates] = useState({
+    actionButtons: {}
+  });
 
   useEffect(() => {
     loadCompanies();
@@ -1815,6 +1819,33 @@ const CompaniesPage = ({ stats, refreshStats }) => {
       loadCompanies();
       refreshStats();
     }
+  };
+
+  // Add this delete function
+  const handleDelete = async (companyId) => {
+    if (window.confirm('Are you sure you want to delete this company? This will remove all associated data including jobs and applications.')) {
+      const result = await deleteDocument('companies', companyId);
+      if (result.success) {
+        loadCompanies();
+        refreshStats();
+      } else {
+        alert('Error deleting company: ' + result.error);
+      }
+    }
+  };
+
+  const handleMouseEnter = (item, type) => {
+    setHoverStates(prev => ({
+      ...prev,
+      [type]: { ...prev[type], [item]: true }
+    }));
+  };
+
+  const handleMouseLeave = (item, type) => {
+    setHoverStates(prev => ({
+      ...prev,
+      [type]: { ...prev[type], [item]: false }
+    }));
   };
 
   // Fixed filter function with null checks
@@ -1893,7 +1924,6 @@ const CompaniesPage = ({ stats, refreshStats }) => {
               <tr>
                 <td colSpan="5" style={{ ...pageStyles.td, textAlign: 'center' }}>
                   <div style={pageStyles.emptyState}>
-                    <div style={pageStyles.emptyIcon}>🏢</div>
                     <h3>No companies found</h3>
                     <p>Try adjusting your search or filter criteria</p>
                   </div>
@@ -1901,7 +1931,15 @@ const CompaniesPage = ({ stats, refreshStats }) => {
               </tr>
             ) : (
               filteredCompanies.map((company) => (
-                <tr key={company.id} style={pageStyles.tr}>
+                <tr 
+                  key={company.id} 
+                  style={{
+                    ...pageStyles.tr,
+                    ...(hoverStates.actionButtons[company.id] && pageStyles.trHover)
+                  }}
+                  onMouseEnter={() => handleMouseEnter(company.id, 'actionButtons')}
+                  onMouseLeave={() => handleMouseLeave(company.id, 'actionButtons')}
+                >
                   <td style={pageStyles.td}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                       <div style={{
@@ -1969,7 +2007,12 @@ const CompaniesPage = ({ stats, refreshStats }) => {
                       {company?.status === 'pending' && (
                         <button 
                           onClick={() => handleStatusChange(company.id, 'active')}
-                          style={pageStyles.approveButton}
+                          style={{
+                            ...pageStyles.approveButton,
+                            ...(hoverStates.actionButtons[`approve-${company.id}`] && pageStyles.approveButtonHover)
+                          }}
+                          onMouseEnter={() => handleMouseEnter(`approve-${company.id}`, 'actionButtons')}
+                          onMouseLeave={() => handleMouseLeave(`approve-${company.id}`, 'actionButtons')}
                         >
                           <CheckCircle size={14} />
                           Approve
@@ -1978,12 +2021,30 @@ const CompaniesPage = ({ stats, refreshStats }) => {
                       {company?.status === 'active' && (
                         <button 
                           onClick={() => handleStatusChange(company.id, 'suspended')}
-                          style={pageStyles.suspendButton}
+                          style={{
+                            ...pageStyles.suspendButton,
+                            ...(hoverStates.actionButtons[`suspend-${company.id}`] && pageStyles.suspendButtonHover)
+                          }}
+                          onMouseEnter={() => handleMouseEnter(`suspend-${company.id}`, 'actionButtons')}
+                          onMouseLeave={() => handleMouseLeave(`suspend-${company.id}`, 'actionButtons')}
                         >
                           <AlertTriangle size={14} />
                           Suspend
                         </button>
                       )}
+                      {/* Add Delete Button */}
+                      <button 
+                        onClick={() => handleDelete(company.id)}
+                        style={{
+                          ...pageStyles.deleteButton,
+                          ...(hoverStates.actionButtons[`delete-${company.id}`] && pageStyles.deleteButtonHover)
+                        }}
+                        onMouseEnter={() => handleMouseEnter(`delete-${company.id}`, 'actionButtons')}
+                        onMouseLeave={() => handleMouseLeave(`delete-${company.id}`, 'actionButtons')}
+                      >
+                        <Trash2 size={14} />
+                        Delete
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -2053,7 +2114,7 @@ const FacultiesPage = () => {
               <tr>
                 <td colSpan="4" style={{ ...pageStyles.td, textAlign: 'center' }}>
                   <div style={pageStyles.emptyState}>
-                    <div style={pageStyles.emptyIcon}>📚</div>
+                    
                     <h3>No faculties found</h3>
                     <p>Faculties will appear here when institutions create them</p>
                   </div>
@@ -2159,7 +2220,7 @@ const CoursesPage = () => {
               <tr>
                 <td colSpan="6" style={{ ...pageStyles.td, textAlign: 'center' }}>
                   <div style={pageStyles.emptyState}>
-                    <div style={pageStyles.emptyIcon}>🎓</div>
+                    
                     <h3>No courses found</h3>
                     <p>Courses will appear here when institutions create them</p>
                   </div>
@@ -2320,7 +2381,7 @@ const AdmissionsPage = ({ refreshStats }) => {
               <tr>
                 <td colSpan="6" style={{ ...pageStyles.td, textAlign: 'center' }}>
                   <div style={pageStyles.emptyState}>
-                    <div style={pageStyles.emptyIcon}>📝</div>
+                    
                     <h3>No applications found</h3>
                     <p>Try adjusting your filter criteria</p>
                   </div>

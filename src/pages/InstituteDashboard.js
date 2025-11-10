@@ -496,7 +496,7 @@ const InstituteProfile = ({ refreshData }) => {
       }
 
       if (result.success) {
-        setSuccess('✅ Institution profile saved successfully!');
+        setSuccess('Institution profile saved successfully!');
         refreshData();
         window.scrollTo(0, 0);
       } else {
@@ -810,12 +810,12 @@ const ManageFaculties = () => {
       if (editingFaculty) {
         result = await updateDocument('faculties', editingFaculty.id, facultyData);
         if (result.success) {
-          setMessage({ type: 'success', text: '✅ Faculty updated successfully!' });
+          setMessage({ type: 'success', text: 'Faculty updated successfully!' });
         }
       } else {
         result = await createDocument('faculties', facultyData);
         if (result.success) {
-          setMessage({ type: 'success', text: '✅ Faculty created successfully!' });
+          setMessage({ type: 'success', text: 'Faculty created successfully!' });
         }
       }
 
@@ -825,10 +825,10 @@ const ManageFaculties = () => {
         setEditingFaculty(null);
         loadFaculties();
       } else {
-        setMessage({ type: 'error', text: `❌ ${result.error}` });
+        setMessage({ type: 'error', text: `${result.error}` });
       }
     } catch (error) {
-      setMessage({ type: 'error', text: '❌ Failed to save faculty' });
+      setMessage({ type: 'error', text: 'Failed to save faculty' });
     }
   };
 
@@ -851,10 +851,10 @@ const ManageFaculties = () => {
 
     const result = await deleteDocument('faculties', facultyId);
     if (result.success) {
-      setMessage({ type: 'success', text: '✅ Faculty deleted successfully!' });
+      setMessage({ type: 'success', text: 'Faculty deleted successfully!' });
       loadFaculties();
     } else {
-      setMessage({ type: 'error', text: '❌ Failed to delete faculty' });
+      setMessage({ type: 'error', text: 'Failed to delete faculty' });
     }
   };
 
@@ -1173,7 +1173,7 @@ const ManageFaculties = () => {
 
       {faculties.length === 0 ? (
         <div style={styles.emptyState}>
-          <div style={styles.emptyIcon}>📚</div>
+        
           <h2>No Faculties Yet</h2>
           <p>Create your first faculty to start organizing your courses.</p>
         </div>
@@ -1315,16 +1315,16 @@ const ManageCourses = () => {
         setMessage({
           type: result.success ? 'success' : 'error',
           text: result.success
-            ? '✅ Course updated successfully!'
-            : `❌ ${result.error}`
+            ? 'Course updated successfully!'
+            : `${result.error}`
         });
       } else {
         result = await createDocument('courses', courseData);
         setMessage({
           type: result.success ? 'success' : 'error',
           text: result.success
-            ? '✅ Course created successfully!'
-            : `❌ ${result.error}`
+            ? 'Course created successfully!'
+            : `${result.error}`
         });
       }
 
@@ -1334,7 +1334,7 @@ const ManageCourses = () => {
         window.scrollTo(0, 0);
       }
     } catch (error) {
-      setMessage({ type: 'error', text: '❌ Failed to save course' });
+      setMessage({ type: 'error', text: 'Failed to save course' });
     }
   };
 
@@ -1389,8 +1389,8 @@ const ManageCourses = () => {
     setMessage({
       type: result.success ? 'success' : 'error',
       text: result.success
-        ? '✅ Course deleted successfully!'
-        : '❌ Failed to delete course'
+        ? 'Course deleted successfully!'
+        : 'Failed to delete course'
     });
     if (result.success) loadData();
   };
@@ -1403,7 +1403,7 @@ const ManageCourses = () => {
     if (result.success) {
       setMessage({
         type: 'success',
-        text: `✅ Admission ${newStatus === 'open' ? 'opened' : 'closed'} for ${course.courseName}`
+        text: `Admission ${newStatus === 'open' ? 'opened' : 'closed'} for ${course.courseName}`
       });
       loadData();
     }
@@ -1633,6 +1633,7 @@ const ManageCourses = () => {
 };
 
 // Embedded ViewApplications Component
+// Embedded ViewApplications Component - UPDATED VERSION
 const ViewApplications = () => {
   const { currentUser } = useAuth();
   const [applications, setApplications] = useState([]);
@@ -1648,10 +1649,39 @@ const ViewApplications = () => {
     const result = await queryDocuments('applications', [
       { field: 'institutionId', operator: '==', value: currentUser.uid }
     ]);
+    
     if (result.success) {
-      setApplications(result.data);
+      // Load student details for each application
+      const applicationsWithStudentDetails = await Promise.all(
+        result.data.map(async (app) => {
+          try {
+            // Get student data
+            const studentResult = await getDocument('students', app.studentId);
+            if (studentResult.success && studentResult.data) {
+              return {
+                ...app,
+                studentName: `${studentResult.data.firstName || ''} ${studentResult.data.lastName || ''}`.trim() || 'Unknown Student',
+                studentEmail: studentResult.data.email || 'No email'
+              };
+            }
+            return {
+              ...app,
+              studentName: 'Unknown Student',
+              studentEmail: 'No email'
+            };
+          } catch (error) {
+            console.error('Error loading student data:', error);
+            return {
+              ...app,
+              studentName: 'Error loading student',
+              studentEmail: 'No email'
+            };
+          }
+        })
+      );
+      setApplications(applicationsWithStudentDetails);
     } else {
-      setMessage('❌ Failed to load applications');
+      setMessage('Failed to load applications');
     }
     setLoading(false);
   };
@@ -1659,10 +1689,10 @@ const ViewApplications = () => {
   const handleStatusChange = async (id, newStatus) => {
     const result = await updateDocument('applications', id, { status: newStatus });
     if (result.success) {
-      setMessage(`✅ Application ${newStatus} successfully`);
+      setMessage(`Application ${newStatus} successfully`);
       loadApplications();
     } else {
-      setMessage('❌ Failed to update status');
+      setMessage('Failed to update status');
     }
   };
 
@@ -1729,12 +1759,13 @@ const ViewApplications = () => {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}>📋 Student Applications</h1>
+      <h1 style={styles.title}>Student Applications</h1>
       {message && <div style={styles.alert}>{message}</div>}
       <table style={styles.table}>
         <thead>
           <tr style={styles.tableHeader}>
             <th style={styles.tableCell}>Student Name</th>
+            <th style={styles.tableCell}>Email</th>
             <th style={styles.tableCell}>Course</th>
             <th style={styles.tableCell}>Status</th>
             <th style={styles.tableCell}>Actions</th>
@@ -1744,6 +1775,7 @@ const ViewApplications = () => {
           {applications.map(app => (
             <tr key={app.id}>
               <td style={styles.tableCell}>{app.studentName}</td>
+              <td style={styles.tableCell}>{app.studentEmail}</td>
               <td style={styles.tableCell}>{app.courseName}</td>
               <td style={styles.tableCell}>
                 <span style={{
@@ -1766,19 +1798,19 @@ const ViewApplications = () => {
                   onClick={() => handleStatusChange(app.id, 'admitted')}
                   style={{ ...styles.button, backgroundColor: '#27ae60' }}
                 >
-                  ✅ Admit
+                  Admit
                 </button>
                 <button
                   onClick={() => handleStatusChange(app.id, 'rejected')}
                   style={{ ...styles.button, backgroundColor: '#e74c3c' }}
                 >
-                  ❌ Reject
+                  Reject
                 </button>
                 <button
                   onClick={() => handleStatusChange(app.id, 'pending')}
                   style={{ ...styles.button, backgroundColor: '#f1c40f' }}
                 >
-                  ⏳ Pending
+                  Pending
                 </button>
               </td>
             </tr>
@@ -1811,7 +1843,7 @@ const PublishAdmissions = () => {
       const anyPublished = result.data.some(student => student.published);
       setPublished(anyPublished);
     } else {
-      setMessage('❌ Failed to fetch admitted students');
+      setMessage('Failed to fetch admitted students');
     }
   };
 
@@ -1820,7 +1852,7 @@ const PublishAdmissions = () => {
       await updateDocument('applications', student.id, { published: true });
     }
     setPublished(true);
-    setMessage('✅ Admissions published successfully!');
+    setMessage('Admissions published successfully!');
   };
 
   const styles = {
@@ -1888,10 +1920,10 @@ const PublishAdmissions = () => {
           <p>Ready to publish admissions for {admittedStudents.length} students.</p>
           {!published ? (
             <button onClick={handlePublish} style={styles.publishButton}>
-              📢 Publish Admissions
+              Publish Admissions
             </button>
           ) : (
-            <p style={styles.publishedText}>✅ Admissions already published</p>
+            <p style={styles.publishedText}>Admissions already published</p>
           )}
           <ul style={styles.studentList}>
             {admittedStudents.map((s) => (
@@ -1907,9 +1939,10 @@ const PublishAdmissions = () => {
   );
 };
 
-// HomePage Component (already embedded)
+//Home page component
+
 const HomePage = ({ dashboardData, setActivePage, refreshTrigger }) => {
-  const { currentUser } = useAuth();
+  const { currentUser, userData } = useAuth();
   const [stats, setStats] = useState({
     totalFaculties: 0,
     totalCourses: 0,
@@ -1927,23 +1960,78 @@ const HomePage = ({ dashboardData, setActivePage, refreshTrigger }) => {
   }, [currentUser, refreshTrigger]);
 
   const loadDashboardData = async () => {
-    // Mock data - in real implementation, this would fetch from Firebase
-    const mockData = {
-      name: 'University of Excellence',
-      status: 'active',
-      stats: {
-        totalFaculties: 8,
-        totalCourses: 45,
-        totalApplications: 324,
-        pendingApplications: 28
+    if (!currentUser) return;
+
+    try {
+      // Load institution profile data
+      const institutionResult = await getDocument('institutions', currentUser.uid);
+      if (institutionResult.success && institutionResult.data) {
+        const institution = institutionResult.data;
+        setInstituteData({
+          name: institution.name || '',
+          status: institution.status || 'pending'
+        });
+
+        // Load faculties count
+        const facultiesResult = await queryDocuments('faculties', [
+          { field: 'institutionId', operator: '==', value: currentUser.uid }
+        ]);
+        const totalFaculties = facultiesResult.success ? facultiesResult.data.length : 0;
+
+        // Load courses count
+        const coursesResult = await queryDocuments('courses', [
+          { field: 'institutionId', operator: '==', value: currentUser.uid }
+        ]);
+        const totalCourses = coursesResult.success ? coursesResult.data.length : 0;
+
+        // Load applications data
+        const applicationsResult = await queryDocuments('applications', [
+          { field: 'institutionId', operator: '==', value: currentUser.uid }
+        ]);
+        
+        let totalApplications = 0;
+        let pendingApplications = 0;
+        
+        if (applicationsResult.success) {
+          totalApplications = applicationsResult.data.length;
+          pendingApplications = applicationsResult.data.filter(app => app.status === 'pending').length;
+        }
+
+        // Update stats with real data
+        setStats({
+          totalFaculties,
+          totalCourses,
+          totalApplications,
+          pendingApplications
+        });
+      } else {
+        // If no institution profile exists yet
+        setInstituteData({
+          name: userData?.email || 'Institution',
+          status: 'pending'
+        });
+        setStats({
+          totalFaculties: 0,
+          totalCourses: 0,
+          totalApplications: 0,
+          pendingApplications: 0
+        });
       }
-    };
-    
-    setInstituteData({
-      name: mockData.name,
-      status: mockData.status
-    });
-    setStats(mockData.stats);
+
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      // Fallback data on error
+      setInstituteData({
+        name: userData?.email || 'Institution',
+        status: 'pending'
+      });
+      setStats({
+        totalFaculties: 0,
+        totalCourses: 0,
+        totalApplications: 0,
+        pendingApplications: 0
+      });
+    }
   };
 
   const styles = {

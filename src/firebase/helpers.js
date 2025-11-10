@@ -22,7 +22,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-// Assuming the config file is located correctly and exports auth, db, and storage
+
 import { auth, db, storage } from './config';
 
 // ==================== AUTH FUNCTIONS ====================

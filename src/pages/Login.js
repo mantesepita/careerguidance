@@ -70,7 +70,7 @@ const Login = () => {
       const result = await resetPassword(resetEmail);
       
       if (result.success) {
-        setResetSuccess('✅ Password reset email sent! Check your inbox.');
+        setResetSuccess('Password reset email sent! Check your inbox.');
         setResetEmail('');
         // Auto close modal after 3 seconds
         setTimeout(() => {

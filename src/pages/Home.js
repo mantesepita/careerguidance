@@ -32,7 +32,7 @@ const Home = () => {
     // User is logged in, navigate to appropriate dashboard based on role
     if (userData?.role === 'student') {
       navigate("/student");
-    } else if (userData?.role === 'institution') {
+    } else if (userData?.role === 'institute') {
       navigate("/institute");
     } else if (userData?.role === 'company') {
       navigate("/company");
