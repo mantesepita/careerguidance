@@ -80,7 +80,8 @@ const Home = () => {
         location: 'Maseru',
         excerpt: 'Recent symposium explores digital regulation and tech-driven future for Lesotho\'s business landscape.',
         tag: 'Technology',
-        image: 'https://media.licdn.com/dms/image/v2/D4D22AQHHgRpWIL0UCw/feedshare-shrink_2048_1536/B4DZo2qudUIMAw-/0/1761853765050?e=1764201600&v=beta&t=uDed3xADmsuRJP2MOPgA0nKNyOghzQlG5ucFB-UADQI'
+        image: 'https://media.licdn.com/dms/image/v2/D4D22AQHHgRpWIL0UCw/feedshare-shrink_2048_1536/B4DZo2qudUIMAw-/0/1761853765050?e=1764201600&v=beta&t=uDed3xADmsuRJP2MOPgA0nKNyOghzQlG5ucFB-UADQI',
+        url:'https://www.thereporter.co.ls/'
       },
       {
         title: 'China Donates Agricultural Equipment to Boost Food Security',
@@ -90,6 +91,7 @@ const Home = () => {
         excerpt: 'Tractors, harvesters, and modern farming tools received to enhance mechanization and reduce import reliance.',
         tag: 'Agriculture',
         image: 'https://www.thereporter.co.ls/wp-content/uploads/2025/11/WhatsApp-Image-2025-11-01-at-13.10.34.jpeg'
+        ,url:'https://www.thereporter.co.ls/2025/11/02/china-donates-m36m-agricultural-equipment/'
       },
       {
         title: 'BEDCO Launches Partnership with RSL and Standard Bank',
@@ -99,6 +101,7 @@ const Home = () => {
         excerpt: 'New initiative aims to support SME development and strengthen local entrepreneurship ecosystem.',
         tag: 'SMEs',
         image: 'https://lesotho.co.ls/wp-content/uploads/2025/06/498199856_685108344130164_8608115310218343840_n.jpg'
+        ,url:'https://www.thereporter.co.ls/2025/09/07/bedco-rsl-to-train-youth-entrepreneurs/'
       },
       {
         title: 'CBL Wins 2025 Corporate Ethical Procurement Award',
@@ -108,6 +111,7 @@ const Home = () => {
         excerpt: 'Central Bank of Lesotho recognized by Chartered Institute for excellence in procurement practices.',
         tag: 'Finance',
         image: 'https://lesotho.co.ls/wp-content/uploads/2025/08/534642658_1330142072453780_828996383979864784_n.jpg'
+        ,url:'https://www.thereporter.co.ls/2025/08/29/cbl-honoured-for-ethical-procurement/'
       }
     ],
     health: [
@@ -119,6 +123,7 @@ const Home = () => {
         excerpt: 'New strategy leverages remote monitoring and big data analytics to transform healthcare delivery nationwide.',
         tag: 'Digital Health',
         image: 'https://www.afro.who.int/sites/default/files/2024-12/339A7389.jpg'
+        ,url:'https://www.policyvault.africa/wp-content/uploads/2025/09/LSO60.pdf'
       },
       {
         title: 'Health Workforce Density to Improve 27% by 2025',
@@ -128,6 +133,7 @@ const Home = () => {
         excerpt: 'Doctors, nurses and midwives per 10,000 population projected to reach 26.73, representing significant progress.',
         tag: 'Healthcare',
         image: 'https://www.pih.org/sites/default/files/inline-images/Lesotho_0218_Botha-BotheMP_CAvila_050-web.jpg'
+        ,url:'https://bmchealthservres.biomedcentral.com/articles/10.1186/s12913-025-12259-x'
       },
       {
         title: 'TB Treatment Program Expands Community Outreach',
@@ -137,6 +143,7 @@ const Home = () => {
         excerpt: 'MDR-TB and XDR-TB care now available with targeted education in schools and vulnerable sectors.',
         tag: 'Public Health',
         image: 'https://www.pih.org/sites/default/files/2025-02/Lesotho_20240420_TBHunterNkau_NChandrasekar_152.jpg'
+        ,url:'https://publiceyenews.com/2025/10/30/beyond-the-mines-how-tb-is-spreading-to-lesothos-next-generation/'
       },
       {
         title: 'Chinese Medical Team Provides Free Services',
@@ -146,6 +153,7 @@ const Home = () => {
         excerpt: 'Landmark humanitarian effort brings free medical services to communities across Lesotho.',
         tag: 'Healthcare Access',
         image: 'https://nul.ls/wp-content/uploads/2025/07/MG_0532-copy-scaled.jpg'
+        ,url:'https://nul.ls/chinese-medical-team-provides-free-health-services-to-roma-community/'
       }
     ],
     education: [
@@ -157,6 +165,7 @@ const Home = () => {
         excerpt: 'Participants to receive training on business plan development and pitching skills for 2025 initiatives.',
         tag: 'Entrepreneurship',
         image: 'https://lesotho.co.ls/wp-content/uploads/2025/09/545184082_1322917046510636_5282686795033644541_n-780x470.jpg'
+        ,url:'https://www.thereporter.co.ls/2025/09/07/bedco-rsl-to-train-youth-entrepreneurs/'
       },
       {
         title: 'Ministry Implements New Curriculum with Teacher Training',
@@ -166,15 +175,17 @@ const Home = () => {
         excerpt: 'Grade 8 teachers across all districts receive training in Scientific and Technological subjects for 2025.',
         tag: 'Curriculum',
         image: 'https://worldbank.scene7.com/is/image/worldbankprod/le-Lesotho-teacher-training?wid=780&hei=439&qlt=85,0&resMode=sharp'
+        ,url:'https://lesotho.co.ls/2025/01/ministry-of-education-supports-new-curriculum-implementation-with-extensive-training-for-teachers/'
       },
       {
-        title: 'NUL Undergraduate Admissions 2024-2025 Open',
+        title: 'NUL Undergraduate Admissions 2025-2026 Open',
         source: 'National University',
         time: '1 week ago',
         location: 'Roma',
         excerpt: 'National University of Lesotho begins online admissions process for undergraduate programs.',
         tag: 'Higher Education',
         image: 'https://africanuniversities.org/wp-content/uploads/2023/06/National-University-of-Lesotho-Lesotho.png'
+        ,url:'https://nul.ls/admission-lists/'
       },
       {
         title: 'Education Project Reduces Junior Secondary Dropout Rates',
@@ -184,6 +195,7 @@ const Home = () => {
         excerpt: 'Dropout rates fall from 27% to 19.8%, with female rates at just 5.2% - exceeding project targets.',
         tag: 'Education Success',
         image: 'https://pbs.twimg.com/media/Gak-m-DWMAAdMgb?format=jpg&name=4096x4096'
+        ,url:'https://www.globalpartnership.org/node/document/download?file=document/file/2024-04-lesotho-partnership-compact.pdf'
       }
     ],
     corporate: [
@@ -195,6 +207,7 @@ const Home = () => {
         excerpt: 'Experts call for economic diversification beyond textiles and subsistence agriculture for sustainable growth.',
         tag: 'Economy',
         image: 'https://mg.co.za/wp-content/uploads/2025/07/maseru_extra_large.jpeg'
+        ,url:'https://newsdayonline.co.ls/lesothos-economy-at-crossroads-can-diversification-save-the-next-generation/'
       },
       {
         title: 'Youth Unemployment Declared State of Emergency',
@@ -204,6 +217,7 @@ const Home = () => {
         excerpt: 'Government addresses deepening crisis as graduates face challenges between qualifications and opportunities.',
         tag: 'Employment',
         image: 'https://apanews.net/wp-content/uploads/2025/02/Unemployment-1-1024x430.jpeg'
+        ,url:'https://www.thereporter.co.ls/2025/06/18/youth-unemployment-declared-a-state-of-emergency/'
       },
       {
         title: 'NSDP II Extended to 2028 with Focus on Private Sector',
@@ -213,6 +227,7 @@ const Home = () => {
         excerpt: 'Extended plan prioritizes inclusive growth, job creation, and strengthening human capital development.',
         tag: 'Policy',
         image: 'https://www.gov.ls/wp-content/uploads/2023/05/PS-TRADE.jpg'
+        ,url:'https://www.gov.ls/nsdp-ii-strategic-focus/'
       },
       {
         title: 'Trade Ministry Promotes Export Growth & SME Linkages',
@@ -222,6 +237,7 @@ const Home = () => {
         excerpt: 'New initiatives enhance logistics, attract investment, and support partnerships between large firms and local SMEs.',
         tag: 'Trade',
         image: 'https://www.gov.ls/wp-content/uploads/2021/11/Thetsane-Industial-Area.jpg'
+        ,url:'https://www.gov.ls/government-ministries/trade-industry-business-development-and-tourism/'
       }
     ]
   };
@@ -483,7 +499,15 @@ const Home = () => {
                     <span>{news.location}</span>
                     <span>{news.source}</span>
                   </div>
-                  <button className="news-read-more">
+                  <button 
+                    className="news-read-more"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent event bubbling
+                      if (news.url) {
+                        window.open(news.url, '_blank', 'noopener,noreferrer');
+                      }
+                    }}
+                  >
                     <span>Read more</span>
                     <ChevronRight className="w-4 h-4" />
                   </button>
@@ -492,7 +516,7 @@ const Home = () => {
             </div>
           ))}
         </div>
-      </div>
+        </div>
 
       {/* Features Section */}
       <div id="features" className="features-section">

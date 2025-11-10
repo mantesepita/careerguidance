@@ -15,8 +15,6 @@ const Resources = () => {
   const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedResource, setSelectedResource] = useState(null);
-  const [showModal, setShowModal] = useState(false);
   const [favorites, setFavorites] = useState(new Set());
   const [viewCounts, setViewCounts] = useState({});
   const [brokenImages, setBrokenImages] = useState(new Set());
@@ -27,7 +25,7 @@ const Resources = () => {
     {
       title: 'Lesotho National Manpower Development Secretariat (NMDS)',
       description: 'Government scholarships for Basotho students to study locally and abroad with comprehensive support and mentorship programs',
-      url: 'https://www.nmds.org.ls',
+      url: 'http://www.scholarships.manp.gov.ls/',
       type: 'scholarship',
       location: 'Local & International',
       icon: Award,
@@ -69,7 +67,7 @@ const Resources = () => {
     {
       title: 'Chinese Government Scholarship',
       description: 'Full scholarships for undergraduate and postgraduate studies in China with language preparation',
-      url: 'http://www.campuschina.org/',
+      url: 'https://www.scholarshipset.com/scholarships-in/china',
       type: 'scholarship',
       location: 'China',
       icon: Globe,
@@ -88,7 +86,7 @@ const Resources = () => {
       location: 'South Africa',
       icon: Award,
       color: 'from-yellow-500 to-red-500',
-      image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8c3R1ZGVudHN8ZW58MHx8MHx8fDA%3D&w=1000&q=80',
+      image: 'https://www.internationalscholarships.dhet.gov.za/images/article/French%20Scholarship.jpg',
       duration: '1-4 years',
       deadline: 'September 30',
       popularity: 78,
@@ -100,35 +98,38 @@ const Resources = () => {
     {
       title: 'CV Writing Guide',
       description: 'Learn how to write a professional CV tailored for the Lesotho job market with local examples and templates',
+      url:'https://www.google.com/aclk?sa=L&ai=DChsSEwik-qKjzeeQAxUXkFAGHYKgHd0YACICCAEQARoCZGc&co=1&ase=2&gclid=CjwKCAiAt8bIBhBpEiwAzH1w6V55Mc_p7Yjg5_l5IRHrv72PHwRCwM9CCpd_Cwoca6LXeJ4a2Z6C-BoCvkEQAvD_BwE&cid=CAASY-RoY3wHynj-V9oXX4ozNI2of9WviM07-D5MciH5EQBvHsPQ1CqkopQOe3dDl1Y4u0JWvtMdvmHW1jn7Sg_ZXrP0DE9RQDFClS9GLxAscBovx98wJPni0esUCw6pDURY73NlqQ&cce=2&category=acrcp_v1_32&sig=AOD64_2UZWSE3FwE0_MMRKtSZiVjd7rqHw&q&nis=4&adurl&ved=2ahUKEwjE6JujzeeQAxUgVkEAHXlbILIQ0Qx6BAgXEAE',
       type: 'career',
       icon: FileText,
       color: 'from-orange-500 to-pink-500',
       content: 'internal',
-      image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fGJ1c2luZXNzJTIwb2ZmaWNlfGVufDB8fDB8fHww&w=1000&q=80',
+      image: 'https://admin.expatica.com/za/wp-content/uploads/sites/12/2023/11/cv-south-africa-1536x1024.jpg',
       duration: '15 min read',
       features: ['Local templates', 'Industry examples', 'ATS optimization', 'Cover letter guide'],
-      download: '/guides/cv-writing-lesotho.pdf'
+      
     },
     {
       title: 'Interview Preparation Tips',
       description: 'Master interview techniques and common questions asked by Lesotho employers with mock interview videos',
+      url:'https://www.indeed.com/career-advice/interviewing/how-to-prepare-for-an-interview',
       type: 'career',
       icon: Users,
       color: 'from-purple-500 to-pink-500',
       content: 'internal',
-      image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fGludGVydmlld3xlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
+      image: 'https://www.povertyactionlab.org/sites/default/files/styles/full_evaluation_image/public/5415-high_0.jpg?itok=ttHN5jKW',
       duration: '25 min read',
       features: ['Common questions', 'Body language tips', 'Salary negotiation', 'Follow-up etiquette'],
-      video: '/videos/interview-tips-lesotho.mp4'
+      
     },
     {
       title: 'Job Search Strategies',
       description: 'Effective strategies for finding employment in Lesotho\'s competitive market with local employer insights',
+      url:'https://www.indeed.com/career-advice/finding-a-job/job-searching-strategies',
       type: 'career',
       icon: Briefcase,
       color: 'from-blue-500 to-cyan-500',
       content: 'internal',
-      image: 'https://images.unsplash.com/photo-1551836026-d5c8c2c3d7b2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGpvYiUyMGZhaXJ8ZW58MHx8MHx8fDA%3D&w=1000&q=80',
+      image: 'https://www.africanresearchers.org/wp-content/uploads/2025/02/A-Scoping-Review-on-Exploring-Job-Search-Strategies-for-Unemployed-Youth-Implications-for-the-Agro-Sector-in-Sub-Saharan-Africa.jpg',
       duration: '20 min read',
       features: ['Networking tips', 'Online platforms', 'Company research', 'Application tracking']
     }
@@ -143,7 +144,7 @@ const Resources = () => {
       location: 'Roma',
       icon: GraduationCap,
       color: 'from-indigo-500 to-purple-500',
-      image: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dW5pdmVyc2l0eXxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
+      image: 'https://upload.wikimedia.org/wikipedia/commons/5/56/National_University_of_Lesotho_Administration_Block.jpg',
       programs: ['Undergraduate', 'Postgraduate', 'Research', 'Distance Learning'],
       ranking: '#1 in Lesotho'
     },
@@ -155,7 +156,7 @@ const Resources = () => {
       location: 'Maseru',
       icon: Book,
       color: 'from-green-500 to-emerald-500',
-      image: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dW5pdmVyc2l0eXxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT2SWSFtYdc5gzTgJBecZGNaCK09haVpEG2gQ&s',
       programs: ['Diploma in Education', 'Bachelor of Education', 'In-service Training'],
       ranking: 'Top Education College'
     },
@@ -167,7 +168,7 @@ const Resources = () => {
       location: 'Maseru',
       icon: Building2,
       color: 'from-orange-500 to-red-500',
-      image: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dW5pdmVyc2l0eXxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRdkiVzJEHsCjHFMgY6h-YqbASudi0ToIIesQ&s',
       programs: ['Design', 'Business', 'Technology', 'Communication'],
       ranking: 'Innovation Focus'
     },
@@ -179,7 +180,7 @@ const Resources = () => {
       location: 'Maseru',
       icon: Building2,
       color: 'from-cyan-500 to-blue-500',
-      image: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8dW5pdmVyc2l0eXxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR5meR1ufg98tbdrMivVeyUwDOHqAqQ5xup7w&s',
       programs: ['Engineering', 'Business Studies', 'Hospitality', 'Computer Science'],
       ranking: 'Leading TVET Institution'
     }
@@ -189,6 +190,7 @@ const Resources = () => {
     {
       title: 'Study Loan Information',
       description: 'Comprehensive information about student loans and financial aid options available in Lesotho with application guidance',
+      url:'https://www.google.com/aclk?sa=L&ai=DChsSEwiZweaTzueQAxXJlFAGHTEjBMIYACICCAEQABoCZGc&co=1&ase=2&gclid=CjwKCAiAt8bIBhBpEiwAzH1w6f-yeKGwN0feFIzwzBDfHF6-YCyw4oflISWc_LTB1lgaM3TXlx62-hoCMAkQAvD_BwE&cid=CAASY-RoBTCiblxyX5lFYf2wiN852QwVhKfLTEbFUPM27Q_DGLcvq6xOo1lVuGVExZVn8YDNPaMQu-YvO3f5HVdGecFpGQAqk8Ii-_VJuwb7wJnrDkrklmGhZJhTmpXoEj2jnUTuPA&cce=2&category=acrcp_v1_32&sig=AOD64_3oX75mO36dwpoB4UwkK-Lll4d8Dw&q&nis=4&adurl&ved=2ahUKEwio1uCTzueQAxU-QEEAHUXwB-sQ0Qx6BAgKEAE',
       type: 'financial',
       icon: DollarSign,
       color: 'from-yellow-500 to-orange-500',
@@ -200,11 +202,12 @@ const Resources = () => {
     {
       title: 'Budgeting for Students',
       description: 'Practical tips on managing finances while studying in Lesotho with local cost of living insights',
+      url:'https://www.thecompleteuniversityguide.co.uk/student-advice/after-you-start/budgeting-for-university',
       type: 'financial',
       icon: TrendingUp,
       color: 'from-green-500 to-teal-500',
       content: 'internal',
-      image: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fGZpbmFuY2lhbCUyMGFkdmljZXxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
+      image: 'https://www.shutterstock.com/image-photo/african-woman-budgeting-south-rands-260nw-2500989015.jpg',
       duration: '12 min read',
       features: ['Monthly budgeting', 'Saving strategies', 'Expense tracking', 'Financial goals']
     }
@@ -233,20 +236,30 @@ const Resources = () => {
     return matchesCategory && matchesSearch;
   });
 
-  const handleResourceClick = (resource) => {
-    // Track view count
-    setViewCounts(prev => ({
-      ...prev,
-      [resource.title]: (prev[resource.title] || 0) + 1
-    }));
+ const handleResourceClick = (resource) => {
+  // Track view count
+  setViewCounts(prev => ({
+    ...prev,
+    [resource.title]: (prev[resource.title] || 0) + 1
+  }));
 
-    if (resource.url) {
-      window.open(resource.url, '_blank', 'noopener,noreferrer');
-    } else {
-      setSelectedResource(resource);
-      setShowModal(true);
-    }
-  };
+  // Determine the target URL
+  let targetUrl;
+  if (resource.url) {
+    // Resource has a direct external URL
+    targetUrl = resource.url;
+  } else {
+    // Resource is an internal guide/content item, create a clean path (slug)
+    const slug = resource.title.toLowerCase()
+      .replace(/[^\w\s-]/g, '') // Remove all non-word characters (except spaces and hyphens)
+      .trim()
+      .replace(/\s+/g, '-'); // Replace spaces with hyphens
+    targetUrl = `/resources/${slug}`;
+  }
+
+  // Open the determined link in a new tab
+  window.open(targetUrl, '_blank', 'noopener,noreferrer');
+};
 
   const toggleFavorite = (resourceTitle, e) => {
     e.stopPropagation();
@@ -261,152 +274,8 @@ const Resources = () => {
     });
   };
 
-  const handleDownload = (resource, e) => {
-    e.stopPropagation();
-    // Simulate download
-    alert(`Downloading: ${resource.title}`);
-  };
-
-  const handleImageError = (imageUrl) => {
-    setBrokenImages(prev => new Set(prev).add(imageUrl));
-  };
-
-  const ResourceModal = () => {
-    if (!selectedResource) return null;
-
-    return (
-      <div style={{
-        position: 'fixed',
-        inset: 0,
-        background: 'rgba(0, 0, 0, 0.7)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
-        padding: '1rem'
-      }}>
-        <div style={{
-          background: 'white',
-          borderRadius: '1rem',
-          maxWidth: '600px',
-          width: '100%',
-          maxHeight: '90vh',
-          overflow: 'auto',
-          position: 'relative'
-        }}>
-          {/* Modal Header */}
-          <div style={{
-            background: `linear-gradient(135deg, ${selectedResource.color.split(' ')[1]}, ${selectedResource.color.split(' ')[3]})`,
-            padding: '2rem',
-            color: 'white',
-            position: 'relative'
-          }}>
-            <button
-              onClick={() => setShowModal(false)}
-              style={{
-                position: 'absolute',
-                top: '1rem',
-                right: '1rem',
-                background: 'rgba(255, 255, 255, 0.2)',
-                border: 'none',
-                borderRadius: '50%',
-                width: '2.5rem',
-                height: '2.5rem',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                color: 'white'
-              }}
-            >
-              <X size={20} />
-            </button>
-            
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-              <selectedResource.icon size={32} />
-              <div>
-                <h3 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: 0 }}>{selectedResource.title}</h3>
-                {selectedResource.location && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.5rem' }}>
-                    <MapPin size={16} />
-                    <span>{selectedResource.location}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Modal Body */}
-          <div style={{ padding: '2rem' }}>
-            <p style={{ color: '#6b7280', marginBottom: '1.5rem', lineHeight: '1.6' }}>
-              {selectedResource.description}
-            </p>
-
-            {/* Features List */}
-            {selectedResource.features && (
-              <div style={{ marginBottom: '1.5rem' }}>
-                <h4 style={{ fontWeight: '600', marginBottom: '0.5rem', color: '#374151' }}>Key Features:</h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem' }}>
-                  {selectedResource.features.map((feature, index) => (
-                    <div key={index} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f97316' }}></div>
-                      <span style={{ fontSize: '0.875rem', color: '#6b7280' }}>{feature}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-              {selectedResource.download && (
-                <button
-                  onClick={(e) => handleDownload(selectedResource, e)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    background: 'linear-gradient(to right, #f97316, #ec4899)',
-                    color: 'white',
-                    padding: '0.75rem 1.5rem',
-                    borderRadius: '0.75rem',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    transition: 'transform 0.2s'
-                  }}
-                >
-                  <Download size={18} />
-                  Download Guide
-                </button>
-              )}
-              
-              {selectedResource.video && (
-                <button
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    background: 'white',
-                    color: '#f97316',
-                    padding: '0.75rem 1.5rem',
-                    borderRadius: '0.75rem',
-                    border: '2px solid #f97316',
-                    cursor: 'pointer',
-                    fontWeight: '600',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  <Play size={18} />
-                  Watch Video
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  
+ 
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(135deg, #fffbeb, #fef2f2, #fffbeb)' }}>
@@ -699,80 +568,112 @@ const Resources = () => {
                 </button>
 
                 {/* Resource Image - FIXED IMAGE PLACEMENT */}
-                <div style={{
-                  height: '160px',
-                  background: isImageBroken 
-                    ? `linear-gradient(135deg, ${resource.color.split(' ')[1]}, ${resource.color.split(' ')[3]})`
-                    : `linear-gradient(135deg, rgba(249, 115, 22, 0.7), rgba(236, 72, 153, 0.7)), url('${resource.image}')`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat',
-                  position: 'relative',
-                  overflow: 'hidden'
-                }}>
-                  {/* Hidden image for error detection */}
-                  <img 
-                    src={resource.image} 
-                    alt="" 
-                    onError={() => handleImageError(resource.image)}
-                    style={{ display: 'none' }} 
-                  />
-                  
-                  {/* Fallback content when image is broken */}
-                  {isImageBroken && (
+                
+
+                    {/* Resource Image - IMPROVED IMAGE HANDLING */}
                     <div style={{
-                      position: 'absolute',
-                      inset: 0,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexDirection: 'column',
-                      color: 'white'
+                    height: '160px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    background: '#f3f4f6' // Fallback background color
                     }}>
-                      <Icon size={48} />
-                      <div style={{ marginTop: '0.5rem', fontSize: '0.875rem' }}>{resource.title}</div>
-                    </div>
-                  )}
-                  
-                  {/* Overlay with icon and location */}
-                  <div style={{ position: 'relative', padding: '1.5rem', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
-                      <div style={{
-                        background: 'rgba(255, 255, 255, 0.2)',
-                        backdropFilter: 'blur(10px)',
-                        padding: '0.75rem',
-                        borderRadius: '0.75rem'
-                      }}>
-                        <Icon style={{ color: 'white' }} size={24} />
-                      </div>
-                      {resource.location && (
-                        <span style={{
-                          background: 'rgba(255, 255, 255, 0.2)',
-                          backdropFilter: 'blur(10px)',
-                          padding: '0.375rem 0.75rem',
-                          borderRadius: '9999px',
-                          fontSize: '0.75rem',
-                          fontWeight: '600',
-                          color: 'white'
+                    {/* Main Image */}
+                    {!brokenImages.has(resource.image) ? (
+                        <img 
+                        src={resource.image} 
+                        alt={resource.title}
+                        onError={() => handleImageError(resource.image)}
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            objectPosition: 'center',
+                            transition: 'transform 0.3s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                            e.target.style.transform = 'scale(1.05)';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.target.style.transform = 'scale(1)';
+                        }}
+                        />
+                    ) : (
+                        /* Fallback when image is broken */
+                        <div style={{
+                        width: '100%',
+                        height: '100%',
+                        background: `linear-gradient(135deg, ${resource.color.split(' ')[1]}, ${resource.color.split(' ')[3]})`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexDirection: 'column',
+                        color: 'white',
+                        padding: '1rem'
                         }}>
-                          {resource.location}
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Popularity Bar */}
-                    {resource.popularity && (
-                      <div style={{ background: 'rgba(0, 0, 0, 0.2)', borderRadius: '9999px', height: '4px', overflow: 'hidden' }}>
+                        <Icon size={48} />
                         <div style={{ 
-                          width: `${resource.popularity}%`, 
-                          height: '100%', 
-                          background: 'white',
-                          transition: 'width 0.5s ease-in-out'
-                        }}></div>
-                      </div>
+                            marginTop: '0.5rem', 
+                            fontSize: '0.875rem',
+                            textAlign: 'center',
+                            fontWeight: '600'
+                        }}>
+                            {resource.title}
+                        </div>
+                        </div>
                     )}
-                  </div>
-                </div>
+                    
+                    {/* Overlay with icon and location */}
+                    <div style={{ 
+                        position: 'absolute', 
+                        inset: 0, 
+                        background: 'linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0.4))',
+                        padding: '1.5rem', 
+                        display: 'flex', 
+                        flexDirection: 'column', 
+                        justifyContent: 'space-between' 
+                    }}>
+                        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
+                        <div style={{
+                            background: 'rgba(255, 255, 255, 0.2)',
+                            backdropFilter: 'blur(10px)',
+                            padding: '0.75rem',
+                            borderRadius: '0.75rem'
+                        }}>
+                            <Icon style={{ color: 'white' }} size={24} />
+                        </div>
+                        {resource.location && (
+                            <span style={{
+                            background: 'rgba(255, 255, 255, 0.2)',
+                            backdropFilter: 'blur(10px)',
+                            padding: '0.375rem 0.75rem',
+                            borderRadius: '9999px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            color: 'white'
+                            }}>
+                            {resource.location}
+                            </span>
+                        )}
+                        </div>
+                        
+                        {/* Popularity Bar */}
+                        {resource.popularity && (
+                        <div style={{ 
+                            background: 'rgba(0, 0, 0, 0.3)', 
+                            borderRadius: '9999px', 
+                            height: '4px', 
+                            overflow: 'hidden' 
+                        }}>
+                            <div style={{ 
+                            width: `${resource.popularity}%`, 
+                            height: '100%', 
+                            background: 'white',
+                            transition: 'width 0.5s ease-in-out'
+                            }}></div>
+                        </div>
+                        )}
+                    </div>
+                    </div>
 
                 {/* Card Body */}
                 <div style={{ padding: '1.5rem' }}>
@@ -985,8 +886,7 @@ const Resources = () => {
 
       <Footer />
       
-      {/* Resource Detail Modal */}
-      {showModal && <ResourceModal />}
+      
     </div>
   );
 };
