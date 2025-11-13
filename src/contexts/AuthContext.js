@@ -138,98 +138,107 @@ export const AuthProvider = ({ children }) => {
    * @returns {object} Success/error status and user data/role.
    */
   const login = async (email, password) => {
-    try {
-      // Input validation
-      if (!email || !password) {
-        return { 
-          success: false, 
-          error: "Email and password are required." 
-        };
-      }
-
-      // Check rate limiting
-      const rateLimitCheck = checkRateLimit(email);
-      if (!rateLimitCheck.allowed) {
-        return { 
-          success: false, 
-          error: rateLimitCheck.message 
-        };
-      }
-
-      const result = await signInWithEmailAndPassword(auth, email, password);
-      
-      // CRITICAL: Check email verification before allowing login
-      if (!result.user.emailVerified) {
-        await signOut(auth);
-        updateRateLimit(email, false);
-        return { 
-          success: false, 
-          error: "Please verify your email address before logging in. Check your inbox for the verification link." 
-        };
-      }
-      
-      // Fetch user data and wait for it
-      const userData = await fetchUserData(result.user);
-      
-      if (!userData) {
-        // Log out the user if Firestore data is missing despite successful authentication
-        await signOut(auth);
-        updateRateLimit(email, false);
-        return { 
-          success: false, 
-          error: "Your user data could not be found. Please contact support." 
-        };
-      }
-
-      // Reset rate limit on successful login
-      updateRateLimit(email, true);
-
-      // Return both success status and user data with role
-      return { 
-        success: true, 
-        userData: userData,
-        role: userData?.role 
-      };
-    } catch (error) {
-      console.error('Login error:', error);
-      
-      // Update rate limit for failed attempt
-      updateRateLimit(email, false);
-      
-      // Return error in consistent format
-      let errorMessage = 'Failed to login. Please try again.';
-      
-      // Handle specific Firebase auth errors
-      switch (error.code) {
-        case 'auth/invalid-email':
-          errorMessage = 'Please enter a valid email address.';
-          break;
-        case 'auth/user-disabled':
-          errorMessage = 'This account has been disabled.';
-          break;
-        case 'auth/user-not-found':
-          errorMessage = 'No account found with this email address.';
-          break;
-        case 'auth/wrong-password':
-        case 'auth/invalid-credential':
-          errorMessage = 'Incorrect email or password. Please try again.';
-          break;
-        case 'auth/too-many-requests':
-          errorMessage = 'Too many failed attempts. Please try again later.';
-          break;
-        case 'auth/network-request-failed':
-          errorMessage = 'Network error. Please check your connection.';
-          break;
-        default:
-          errorMessage = error.message || 'Failed to login.';
-      }
-      
+  try {
+    // Input validation
+    if (!email || !password) {
       return { 
         success: false, 
-        error: errorMessage 
+        error: "Email and password are required." 
       };
     }
-  };
+
+    // Check rate limiting
+    const rateLimitCheck = checkRateLimit(email);
+    if (!rateLimitCheck.allowed) {
+      return { 
+        success: false, 
+        error: rateLimitCheck.message 
+      };
+    }
+
+    const result = await signInWithEmailAndPassword(auth, email, password);
+    
+    // IMPORTANT: Only check email verification for NEW accounts
+    // Get the user's creation time to determine if it's a new account
+    const userCreationTime = new Date(result.user.metadata.creationTime).getTime();
+    const currentTime = new Date().getTime();
+    const accountAge = currentTime - userCreationTime;
+    
+    // If account was created less than 5 minutes ago, enforce email verification
+    // This allows existing accounts to continue working
+    const isNewAccount = accountAge < 5 * 60 * 1000; // 5 minutes
+    
+    if (isNewAccount && !result.user.emailVerified) {
+      await signOut(auth);
+      updateRateLimit(email, false);
+      return { 
+        success: false, 
+        error: "Please verify your email address before logging in. Check your inbox for the verification link." 
+      };
+    }
+    
+    // Fetch user data and wait for it
+    const userData = await fetchUserData(result.user);
+    
+    if (!userData) {
+      // Log out the user if Firestore data is missing despite successful authentication
+      await signOut(auth);
+      updateRateLimit(email, false);
+      return { 
+        success: false, 
+        error: "Your user data could not be found. Please contact support." 
+      };
+    }
+
+    // Reset rate limit on successful login
+    updateRateLimit(email, true);
+
+    // Return both success status and user data with role
+    return { 
+      success: true, 
+      userData: userData,
+      role: userData?.role 
+    };
+  } catch (error) {
+    console.error('Login error:', error);
+    
+    // Update rate limit for failed attempt
+    updateRateLimit(email, false);
+    
+    // Return error in consistent format
+    let errorMessage = 'Failed to login. Please try again.';
+    
+    // Handle specific Firebase auth errors
+    switch (error.code) {
+      case 'auth/invalid-email':
+        errorMessage = 'Please enter a valid email address.';
+        break;
+      case 'auth/user-disabled':
+        errorMessage = 'This account has been disabled.';
+        break;
+      case 'auth/user-not-found':
+        errorMessage = 'No account found with this email address.';
+        break;
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential':
+        errorMessage = 'Incorrect email or password. Please try again.';
+        break;
+      case 'auth/too-many-requests':
+        errorMessage = 'Too many failed attempts. Please try again later.';
+        break;
+      case 'auth/network-request-failed':
+        errorMessage = 'Network error. Please check your connection.';
+        break;
+      default:
+        errorMessage = error.message || 'Failed to login.';
+    }
+    
+    return { 
+      success: false, 
+      error: errorMessage 
+    };
+  }
+};
 
   /**
    * Registers a new user and saves their profile data to Firestore.
@@ -240,65 +249,63 @@ export const AuthProvider = ({ children }) => {
    * @returns {object} Success/error status and user data/role.
    */
   const register = async (email, password, profileData, role) => {
-    try {
-      // Input validation
-      if (!email || !password || !profileData || !role) {
-        return { success: false, error: "All fields are required." };
+  try {
+    // Input validation
+    if (!email || !password || !profileData || !role) {
+      return { success: false, error: "All fields are required." };
+    }
+
+    // Enhanced email validation for NEW registrations
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return { success: false, error: "Please enter a valid email address." };
+    }
+
+    // Additional email validation checks
+    if (email.length > 254) { // RFC 5321 limit
+      return { success: false, error: "Email address is too long." };
+    }
+
+    const parts = email.split('@');
+    if (parts[0].length > 64) { // Local part limit
+      return { success: false, error: "Invalid email address format." };
+    }
+
+    const domain = parts[1];
+    const domainRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!domainRegex.test(domain)) {
+      return { success: false, error: "Please enter a valid email domain." };
+    }
+
+    // ✅ ADD THIS: Block fake emails for NEW registrations
+    const fakeEmailPatterns = [
+      /^test@/i,
+      /^fake@/i,
+      /^demo@/i,
+      /^temp@/i,
+      /@example\./i,
+      /@test\./i,
+      /@fake\./i,
+      /@temp\./i,
+      /123@/,
+      /admin@/i,
+      /@localhost/i,
+      /@domain\.com/i,
+      /@email\.com/i,
+      /@mail\.com/i
+    ];
+
+    for (const pattern of fakeEmailPatterns) {
+      if (pattern.test(email)) {
+        return { success: false, error: "Please use a valid personal or work email address. Temporary or test emails are not allowed." };
       }
+    }
 
-      // Enhanced email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return { success: false, error: "Please enter a valid email address." };
-      }
-
-      // Additional email validation checks
-      if (email.length > 254) { // RFC 5321 limit
-        return { success: false, error: "Email address is too long." };
-      }
-
-      const parts = email.split('@');
-      if (parts[0].length > 64) { // Local part limit
-        return { success: false, error: "Invalid email address format." };
-      }
-
-      const domain = parts[1];
-      const domainRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-      if (!domainRegex.test(domain)) {
-        return { success: false, error: "Please enter a valid email domain." };
-      }
-
-      // Check for common fake email patterns
-      const fakeEmailPatterns = [
-        /^test@/i,
-        /^fake@/i,
-        /^demo@/i,
-        /^temp@/i,
-        /@example\./i,
-        /@test\./i,
-        /@fake\./i,
-        /@temp\./i,
-        /123@/,
-        /admin@/i
-      ];
-
-      for (const pattern of fakeEmailPatterns) {
-        if (pattern.test(email)) {
-          return { success: false, error: "Please use a valid personal or work email address." };
-        }
-      }
-
-      // Validate role
-      const validRoles = ['admin', 'institute', 'student', 'company'];
-      if (!validRoles.includes(role)) {
-        return { success: false, error: "Invalid user role specified." };
-      }
-
-      // Validate profile data (basic check)
-      if (typeof profileData !== 'object' || Object.keys(profileData).length === 0) {
-        return { success: false, error: "Profile data is required." };
-      }
-
+    // Validate role
+    const validRoles = ['admin', 'institute', 'student', 'company'];
+    if (!validRoles.includes(role)) {
+      return { success: false, error: "Invalid user role specified." };
+    }
       // Set flag to indicate new registration
       setIsNewRegistration(true);
 
