@@ -1221,6 +1221,7 @@ const ManageFaculties = () => {
 };
 
 // Embedded ManageCourses Component
+// src/components/institute/ManageCourses.js
 const ManageCourses = () => {
   const { currentUser } = useAuth();
   const [courses, setCourses] = useState([]);
@@ -1237,7 +1238,7 @@ const ManageCourses = () => {
     level: 'undergraduate',
     requirements: {
       minimumPoints: '',
-      requiredSubjects: '',
+      requiredSubjects: [],
       minimumGrade: 'C'
     },
     description: '',
@@ -1246,6 +1247,19 @@ const ManageCourses = () => {
     availableSlots: '',
     admissionStatus: 'open'
   });
+
+  // Available subjects (same as in StudentProfile)
+  const availableSubjects = [
+    'Mathematics', 'English', 'Sesotho', 'Science', 
+    'Biology', 'Physics', 'Chemistry', 'Accounting',
+    'Commerce', 'Economics', 'Geography', 'History',
+    'Computer Studies', 'Agriculture', 'Development Studies'
+  ];
+
+  // Grade options (same as in StudentProfile)
+  const gradeOptions = [
+    'A*', 'A', 'B', 'C', 'D', 'E', 'F'
+  ];
 
   useEffect(() => {
     if (currentUser) loadData();
@@ -1280,15 +1294,57 @@ const ManageCourses = () => {
     }
   };
 
+  // Handle subject requirement changes
+  const handleSubjectRequirementChange = (index, field, value) => {
+    const updatedSubjects = [...formData.requirements.requiredSubjects];
+    updatedSubjects[index] = {
+      ...updatedSubjects[index],
+      [field]: value
+    };
+    setFormData(prev => ({
+      ...prev,
+      requirements: {
+        ...prev.requirements,
+        requiredSubjects: updatedSubjects
+      }
+    }));
+  };
+
+  // Add new subject requirement
+  const addSubjectRequirement = () => {
+    setFormData(prev => ({
+      ...prev,
+      requirements: {
+        ...prev.requirements,
+        requiredSubjects: [
+          ...prev.requirements.requiredSubjects,
+          { subject: '', minimumGrade: 'C' }
+        ]
+      }
+    }));
+  };
+
+  // Remove subject requirement
+  const removeSubjectRequirement = (index) => {
+    const updatedSubjects = formData.requirements.requiredSubjects.filter((_, i) => i !== index);
+    setFormData(prev => ({
+      ...prev,
+      requirements: {
+        ...prev.requirements,
+        requiredSubjects: updatedSubjects
+      }
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage({ type: '', text: '' });
 
     try {
-      const requiredSubjectsArray = formData.requirements.requiredSubjects
-        .split(',')
-        .map(s => s.trim())
-        .filter(s => s);
+      // Filter out empty subject requirements
+      const validRequiredSubjects = formData.requirements.requiredSubjects.filter(
+        subject => subject.subject && subject.minimumGrade
+      );
 
       const courseData = {
         institutionId: currentUser.uid,
@@ -1298,14 +1354,14 @@ const ManageCourses = () => {
         duration: formData.duration,
         level: formData.level,
         requirements: {
-          minimumPoints: parseInt(formData.requirements.minimumPoints),
-          requiredSubjects: requiredSubjectsArray,
+          minimumPoints: parseInt(formData.requirements.minimumPoints) || 0,
+          requiredSubjects: validRequiredSubjects,
           minimumGrade: formData.requirements.minimumGrade
         },
         description: formData.description,
-        fees: parseFloat(formData.fees),
+        fees: parseFloat(formData.fees) || 0,
         intake: formData.intake,
-        availableSlots: parseInt(formData.availableSlots),
+        availableSlots: parseInt(formData.availableSlots) || 0,
         admissionStatus: formData.admissionStatus
       };
 
@@ -1316,7 +1372,7 @@ const ManageCourses = () => {
           type: result.success ? 'success' : 'error',
           text: result.success
             ? 'Course updated successfully!'
-            : `${result.error}`
+            : ` ${result.error}`
         });
       } else {
         result = await createDocument('courses', courseData);
@@ -1324,7 +1380,7 @@ const ManageCourses = () => {
           type: result.success ? 'success' : 'error',
           text: result.success
             ? 'Course created successfully!'
-            : `${result.error}`
+            : ` ${result.error}`
         });
       }
 
@@ -1347,7 +1403,7 @@ const ManageCourses = () => {
       level: 'undergraduate',
       requirements: {
         minimumPoints: '',
-        requiredSubjects: '',
+        requiredSubjects: [],
         minimumGrade: 'C'
       },
       description: '',
@@ -1369,14 +1425,14 @@ const ManageCourses = () => {
       duration: course.duration,
       level: course.level,
       requirements: {
-        minimumPoints: course.requirements.minimumPoints.toString(),
-        requiredSubjects: course.requirements.requiredSubjects.join(', '),
-        minimumGrade: course.requirements.minimumGrade
+        minimumPoints: course.requirements.minimumPoints?.toString() || '',
+        requiredSubjects: course.requirements.requiredSubjects || [],
+        minimumGrade: course.requirements.minimumGrade || 'C'
       },
       description: course.description,
-      fees: course.fees.toString(),
+      fees: course.fees?.toString() || '',
       intake: course.intake,
-      availableSlots: course.availableSlots.toString(),
+      availableSlots: course.availableSlots?.toString() || '',
       admissionStatus: course.admissionStatus
     });
     setShowForm(true);
@@ -1409,127 +1465,22 @@ const ManageCourses = () => {
     }
   };
 
-  const styles = {
-    container: {
-      maxWidth: '1000px',
-      margin: '0 auto',
-      backgroundColor: 'white',
-      borderRadius: '1rem',
-      padding: '2rem',
-      border: '1px solid #fed7aa',
-      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'
-    },
-    header: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '20px'
-    },
-    title: {
-      color: '#2c3e50',
-      fontSize: '32px',
-      margin: '0'
-    },
-    addButton: {
-      background: 'linear-gradient(to right, #f97316, #ec4899)',
-      color: '#fff',
-      border: 'none',
-      padding: '12px 24px',
-      borderRadius: '8px',
-      fontSize: '15px',
-      fontWeight: '600',
-      cursor: 'pointer'
-    },
-    input: {
-      display: 'block',
-      width: '100%',
-      marginBottom: '15px',
-      padding: '12px',
-      border: '2px solid #e9ecef',
-      borderRadius: '8px',
-      fontSize: '14px'
-    },
-    textarea: {
-      display: 'block',
-      width: '100%',
-      marginBottom: '15px',
-      padding: '12px',
-      border: '2px solid #e9ecef',
-      borderRadius: '8px',
-      fontSize: '14px',
-      minHeight: '100px'
-    },
-    submitButton: {
-      background: '#d1a559ff',
-      color: '#fff',
-      border: 'none',
-      padding: '12px 24px',
-      borderRadius: '8px',
-      fontSize: '15px',
-      fontWeight: '600',
-      cursor: 'pointer'
-    },
-    successAlert: {
-      background: '#d4edda',
-      color: '#155724',
-      padding: '15px',
-      borderRadius: '8px',
-      marginBottom: '20px',
-      border: '1px solid #c3e6cb'
-    },
-    errorAlert: {
-      background: '#f8d7da',
-      color: '#721c24',
-      padding: '15px',
-      borderRadius: '8px',
-      marginBottom: '20px',
-      border: '1px solid #f5c6cb'
-    },
-    coursesGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-      gap: '20px',
-      marginTop: '20px'
-    },
-    courseCard: {
-      border: '1px solid #e9ecef',
-      padding: '20px',
-      borderRadius: '12px',
-      background: '#fff',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-    },
-    smallButton: {
-      marginRight: '10px',
-      background: '#f1db59ff',
-      color: '#fff',
-      border: 'none',
-      padding: '8px 12px',
-      borderRadius: '6px',
-      fontSize: '12px',
-      cursor: 'pointer'
-    },
-    warningCard: {
-      padding: '40px',
-      textAlign: 'center',
-      background: '#fff3cd',
-      borderRadius: '8px',
-      border: '1px solid #ffc107'
-    }
+  // Get available subjects that haven't been selected yet
+  const getAvailableSubjectsForSelection = (currentIndex) => {
+    const selectedSubjects = formData.requirements.requiredSubjects
+      .map((req, index) => index === currentIndex ? null : req.subject)
+      .filter(Boolean);
+    
+    return availableSubjects.filter(subject => !selectedSubjects.includes(subject));
   };
 
-  if (loading) return (
-    <div style={styles.container}>
-      <h2 style={{ textAlign: 'center' }}>Loading courses...</h2>
-    </div>
-  );
-
+  // 🔄 UI Rendering
+  if (loading) return <h2 style={{ textAlign: 'center' }}>Loading courses...</h2>;
   if (faculties.length === 0)
     return (
-      <div style={styles.container}>
-        <div style={styles.warningCard}>
-          <h2>No Faculties Found</h2>
-          <p>Create a faculty first under "Manage Faculties" before adding courses.</p>
-        </div>
+      <div style={styles.warningCard}>
+        <h2>No Faculties Found</h2>
+        <p>Create a faculty first under "Manage Faculties".</p>
       </div>
     );
 
@@ -1538,7 +1489,7 @@ const ManageCourses = () => {
       <div style={styles.header}>
         <h1 style={styles.title}>Manage Courses</h1>
         <button onClick={() => setShowForm(!showForm)} style={styles.addButton}>
-          {showForm ? ' Cancel' : ' Add Course'}
+          {showForm ? 'Cancel' : 'Add Course'}
         </button>
       </div>
 
@@ -1549,7 +1500,7 @@ const ManageCourses = () => {
       )}
 
       {showForm && (
-        <form onSubmit={handleSubmit} style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '12px' }}>
+        <form onSubmit={handleSubmit} style={styles.form}>
           <select
             name="facultyId"
             value={formData.facultyId}
@@ -1590,6 +1541,150 @@ const ManageCourses = () => {
             style={styles.textarea}
           />
 
+          {/* Requirements Section */}
+          <div style={styles.section}>
+            <h3 style={styles.sectionTitle}>Admission Requirements</h3>
+            
+            <div style={styles.requirementGroup}>
+              <label style={styles.label}>Minimum Points Required:</label>
+              <input
+                type="number"
+                name="requirements.minimumPoints"
+                value={formData.requirements.minimumPoints}
+                onChange={handleChange}
+                placeholder="e.g., 30"
+                min="0"
+                style={styles.input}
+              />
+            </div>
+
+            <div style={styles.requirementGroup}>
+              <label style={styles.label}>Required Subjects:</label>
+              <p style={styles.helpText}>Add the subjects and minimum grades required for this course</p>
+              
+              {formData.requirements.requiredSubjects.map((subjectReq, index) => (
+                <div key={index} style={styles.subjectRow}>
+                  <select
+                    value={subjectReq.subject}
+                    onChange={(e) => handleSubjectRequirementChange(index, 'subject', e.target.value)}
+                    required
+                    style={styles.subjectSelect}
+                  >
+                    <option value="">Select Subject</option>
+                    {getAvailableSubjectsForSelection(index).map(subject => (
+                      <option key={subject} value={subject}>{subject}</option>
+                    ))}
+                  </select>
+                  
+                  <select
+                    value={subjectReq.minimumGrade}
+                    onChange={(e) => handleSubjectRequirementChange(index, 'minimumGrade', e.target.value)}
+                    required
+                    style={styles.gradeSelect}
+                  >
+                    <option value="">Min Grade</option>
+                    {gradeOptions.map(grade => (
+                      <option key={grade} value={grade}>
+                        {grade}
+                      </option>
+                    ))}
+                  </select>
+                  
+                  <button 
+                    type="button" 
+                    onClick={() => removeSubjectRequirement(index)}
+                    style={styles.removeButton}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              
+              <button 
+                type="button" 
+                onClick={addSubjectRequirement}
+                style={styles.addSubjectButton}
+              >
+                + Add Subject Requirement
+              </button>
+            </div>
+
+            <div style={styles.requirementGroup}>
+              <label style={styles.label}>Overall Minimum Grade:</label>
+              <select
+                name="requirements.minimumGrade"
+                value={formData.requirements.minimumGrade}
+                onChange={handleChange}
+                style={styles.input}
+              >
+                {gradeOptions.map(grade => (
+                  <option key={grade} value={grade}>{grade}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div style={styles.formRow}>
+            <input
+              name="duration"
+              value={formData.duration}
+              onChange={handleChange}
+              placeholder="Duration (e.g., 3 years)"
+              style={styles.halfInput}
+            />
+
+            <input
+              name="fees"
+              type="number"
+              value={formData.fees}
+              onChange={handleChange}
+              placeholder="Fees (LSL)"
+              style={styles.halfInput}
+            />
+          </div>
+
+          <div style={styles.formRow}>
+            <input
+              name="intake"
+              value={formData.intake}
+              onChange={handleChange}
+              placeholder="Intake Period (e.g., January 2024)"
+              style={styles.halfInput}
+            />
+
+            <input
+              name="availableSlots"
+              type="number"
+              value={formData.availableSlots}
+              onChange={handleChange}
+              placeholder="Available Slots"
+              min="1"
+              style={styles.halfInput}
+            />
+          </div>
+
+          <select
+            name="level"
+            value={formData.level}
+            onChange={handleChange}
+            style={styles.input}
+          >
+            <option value="undergraduate">Undergraduate</option>
+            <option value="postgraduate">Postgraduate</option>
+            <option value="diploma">Diploma</option>
+            <option value="certificate">Certificate</option>
+          </select>
+
+          <select
+            name="admissionStatus"
+            value={formData.admissionStatus}
+            onChange={handleChange}
+            style={styles.input}
+          >
+            <option value="open">Open for Applications</option>
+            <option value="closed">Closed</option>
+          </select>
+
           <button type="submit" style={styles.submitButton}>
             {editingCourse ? 'Update Course' : 'Create Course'}
           </button>
@@ -1598,31 +1693,47 @@ const ManageCourses = () => {
 
       <div style={styles.coursesGrid}>
         {courses.length === 0 ? (
-          <p>No courses available. Create one above.</p>
+          <p style={styles.noCourses}>No courses available. Create one above.</p>
         ) : (
           courses.map(course => (
             <div key={course.id} style={styles.courseCard}>
-              <h3 style={{ margin: '0 0 10px 0', color: '#2c3e50' }}>{course.courseName}</h3>
-              <p style={{ margin: '0 0 5px 0', color: '#7f8c8d' }}><strong>Code:</strong> {course.courseCode}</p>
-              <p style={{ margin: '0 0 10px 0', color: '#555' }}>{course.description}</p>
-              <p style={{ margin: '0 0 15px 0' }}>
-                <strong>Status:</strong> 
-                <span style={{ 
-                  color: course.admissionStatus === 'open' ? '#27ae60' : '#e74c3c',
-                  fontWeight: 'bold',
-                  marginLeft: '5px'
-                }}>
+              <h3 style={styles.courseName}>{course.courseName}</h3>
+              <p style={styles.courseCode}>{course.courseCode}</p>
+              <p style={styles.description}>{course.description}</p>
+              
+              // In the course card section, replace the requirementsPreview part with this:
+<div style={styles.requirementsPreview}>
+  <strong>Requirements:</strong>
+  <p>Minimum Points: {course.requirements.minimumPoints || 'Not specified'}</p>
+  <p>Overall Minimum Grade: {course.requirements.minimumGrade || 'C'}</p>
+  {course.requirements.requiredSubjects && course.requirements.requiredSubjects.length > 0 ? (
+    <div>
+      <strong>Required Subjects:</strong>
+      <ul style={styles.subjectList}>
+        {course.requirements.requiredSubjects.map((req, index) => (
+          <li key={index}>
+            {req.subject} (Min Grade: {req.minimumGrade})
+          </li>
+        ))}
+      </ul>
+    </div>
+  ) : (
+    <p>No specific subject requirements</p>
+  )}
+</div>
+              <div style={styles.courseMeta}>
+                <span style={course.admissionStatus === 'open' ? styles.statusOpen : styles.statusClosed}>
                   {course.admissionStatus.toUpperCase()}
                 </span>
-              </p>
-              <div>
-                <button onClick={() => toggleAdmissionStatus(course)} style={{...styles.smallButton, 
-                  background: course.admissionStatus === 'open' ? 'coral' : '#27ae60'
-                }}>
+                <span style={styles.slots}>Slots: {course.availableSlots}</span>
+              </div>
+
+              <div style={styles.actionButtons}>
+                <button onClick={() => toggleAdmissionStatus(course)} style={styles.smallButton}>
                   {course.admissionStatus === 'open' ? 'Close' : 'Open'}
                 </button>
                 <button onClick={() => handleEdit(course)} style={styles.smallButton}>Edit</button>
-                <button onClick={() => handleDelete(course.id)} style={{...styles.smallButton, background: '#e74c3c'}}>Delete</button>
+                <button onClick={() => handleDelete(course.id)} style={styles.deleteButton}>Delete</button>
               </div>
             </div>
           ))
@@ -1631,6 +1742,324 @@ const ManageCourses = () => {
     </div>
   );
 };
+
+// Enhanced inline styles
+// Enhanced inline styles with orange-pink theme
+const styles = {
+  container: { 
+    maxWidth: '1000px', 
+    margin: '0 auto', 
+    padding: '20px',
+    background: 'linear-gradient(135deg, #fff5f5 0%, #fff0f5 100%)',
+    minHeight: '100vh'
+  },
+  header: { 
+    display: 'flex', 
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: '30px',
+    padding: '20px',
+    background: 'linear-gradient(135deg, #ff6b35 0%, #ff8e53 100%)',
+    borderRadius: '12px',
+    boxShadow: '0 4px 15px rgba(255, 107, 53, 0.3)'
+  },
+  title: { 
+    color: 'white', 
+    margin: 0,
+    fontSize: '32px',
+    fontWeight: 'bold',
+    textShadow: '1px 1px 2px rgba(0,0,0,0.2)'
+  },
+  addButton: { 
+    background: 'linear-gradient(135deg, #ff4081 0%, #ff79a9 100%)', 
+    color: 'white', 
+    border: 'none', 
+    padding: '12px 25px', 
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    boxShadow: '0 4px 12px rgba(255, 64, 129, 0.4)'
+  },
+  form: { 
+    background: 'linear-gradient(135deg, #fffaf0 0%, #fff5ee 100%)', 
+    padding: '25px', 
+    borderRadius: '12px', 
+    marginBottom: '25px',
+    border: '2px solid #ffb74d',
+    boxShadow: '0 4px 15px rgba(255, 183, 77, 0.2)'
+  },
+  input: { 
+    display: 'block', 
+    width: '100%', 
+    marginBottom: '15px', 
+    padding: '12px',
+    border: '2px solid #ffb74d',
+    borderRadius: '8px',
+    fontSize: '16px',
+    background: 'white'
+  },
+  halfInput: {
+    width: '48%',
+    padding: '12px',
+    border: '2px solid #ffb74d',
+    borderRadius: '8px',
+    background: 'white'
+  },
+  textarea: { 
+    display: 'block', 
+    width: '100%', 
+    marginBottom: '15px', 
+    padding: '12px',
+    border: '2px solid #ffb74d',
+    borderRadius: '8px',
+    minHeight: '100px',
+    fontSize: '16px',
+    background: 'white',
+    resize: 'vertical'
+  },
+  formRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    gap: '15px',
+    marginBottom: '15px'
+  },
+  section: {
+    border: '2px solid #ffb74d',
+    padding: '20px',
+    borderRadius: '10px',
+    marginBottom: '20px',
+    background: 'linear-gradient(135deg, #fffaf0 0%, #fff5ee 100%)',
+    boxShadow: '0 2px 10px rgba(255, 183, 77, 0.1)'
+  },
+  sectionTitle: {
+    color: '#ff6b35',
+    marginTop: 0,
+    marginBottom: '20px',
+    borderBottom: '3px solid #ff4081',
+    paddingBottom: '10px',
+    fontSize: '20px',
+    fontWeight: 'bold'
+  },
+  requirementGroup: {
+    marginBottom: '20px'
+  },
+  label: {
+    display: 'block',
+    marginBottom: '8px',
+    fontWeight: 'bold',
+    color: '#ff6b35',
+    fontSize: '15px'
+  },
+  helpText: {
+    fontSize: '0.9em',
+    color: '#ff8e53',
+    margin: '0 0 15px 0',
+    fontStyle: 'italic'
+  },
+  subjectRow: {
+    display: 'flex',
+    gap: '12px',
+    alignItems: 'center',
+    marginBottom: '12px',
+    padding: '12px',
+    background: 'white',
+    borderRadius: '8px',
+    border: '1px solid #ffb74d'
+  },
+  subjectSelect: {
+    flex: 2,
+    padding: '10px',
+    border: '2px solid #ffb74d',
+    borderRadius: '6px',
+    background: 'white'
+  },
+  gradeSelect: {
+    flex: 1,
+    padding: '10px',
+    border: '2px solid #ffb74d',
+    borderRadius: '6px',
+    background: 'white'
+  },
+  removeButton: {
+    background: 'linear-gradient(135deg, #ff5252 0%, #ff7979 100%)',
+    color: 'white',
+    border: 'none',
+    padding: '10px 15px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 'bold',
+    boxShadow: '0 2px 8px rgba(255, 82, 82, 0.3)'
+  },
+  addSubjectButton: {
+    background: 'linear-gradient(135deg, #ff6b35 0%, #ff8e53 100%)',
+    color: 'white',
+    border: 'none',
+    padding: '12px 18px',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 'bold',
+    marginTop: '10px',
+    boxShadow: '0 2px 8px rgba(76, 175, 80, 0.3)'
+  },
+  submitButton: { 
+    background: 'linear-gradient(135deg, #ff6b35 0%, #ff8e53 100%)', 
+    color: 'white', 
+    border: 'none', 
+    padding: '15px 30px', 
+    borderRadius: '8px',
+    cursor: 'pointer',
+    width: '100%',
+    fontSize: '18px',
+    fontWeight: 'bold',
+    boxShadow: '0 4px 15px rgba(255, 107, 53, 0.4)'
+  },
+  successAlert: { 
+    background: 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)', 
+    color: 'white', 
+    padding: '15px', 
+    borderRadius: '8px', 
+    marginBottom: '20px',
+    border: 'none',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
+  },
+  errorAlert: { 
+    background: 'linear-gradient(135deg, #ff5252 0%, #ff7979 100%)', 
+    color: 'white', 
+    padding: '15px', 
+    borderRadius: '8px', 
+    marginBottom: '20px',
+    border: 'none',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    boxShadow: '0 4px 12px rgba(255, 82, 82, 0.3)'
+  },
+  coursesGrid: { 
+    display: 'grid', 
+    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+    gap: '25px' 
+  },
+  courseCard: { 
+    border: '2px solid #ffb74d', 
+    padding: '25px', 
+    borderRadius: '12px', 
+    background: 'linear-gradient(135deg, #fffaf0 0%, #fff5ee 100%)',
+    boxShadow: '0 4px 15px rgba(255, 183, 77, 0.2)'
+  },
+  courseName: { 
+    color: '#ff6b35', 
+    margin: '0 0 12px 0',
+    fontSize: '22px',
+    fontWeight: 'bold'
+  },
+  courseCode: {
+    color: '#ff8e53',
+    margin: '0 0 12px 0',
+    fontWeight: 'bold',
+    fontSize: '16px'
+  },
+  description: {
+    color: '#e65100',
+    margin: '0 0 18px 0',
+    lineHeight: '1.5',
+    fontSize: '15px'
+  },
+  requirementsPreview: {
+    background: 'white',
+    padding: '18px',
+    borderRadius: '8px',
+    marginBottom: '18px',
+    fontSize: '14px',
+    border: '1px solid #ffb74d'
+  },
+  subjectList: {
+    margin: '8px 0',
+    paddingLeft: '20px',
+    fontSize: '13px',
+    color: '#e65100'
+  },
+  courseMeta: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '18px'
+  },
+  statusOpen: {
+    background: 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
+    color: 'white',
+    padding: '6px 12px',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    boxShadow: '0 2px 8px rgba(76, 175, 80, 0.3)'
+  },
+  statusClosed: {
+    background: 'linear-gradient(135deg, #ff5252 0%, #ff7979 100%)',
+    color: 'white',
+    padding: '6px 12px',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: 'bold',
+    boxShadow: '0 2px 8px rgba(255, 82, 82, 0.3)'
+  },
+  slots: {
+    color: '#ff8e53',
+    fontSize: '14px',
+    fontWeight: 'bold'
+  },
+  actionButtons: {
+    display: 'flex',
+    gap: '10px'
+  },
+  smallButton: { 
+    flex: 1,
+    background: 'linear-gradient(135deg, #ff4081 0%, #ff79a9 100%)', 
+    color: 'white', 
+    border: 'none', 
+    padding: '10px 15px', 
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 'bold',
+    boxShadow: '0 2px 8px rgba(255, 64, 129, 0.3)'
+  },
+  deleteButton: {
+    flex: 1,
+    background: 'linear-gradient(135deg, #ff5252 0%, #ff7979 100%)',
+    color: 'white',
+    border: 'none',
+    padding: '10px 15px',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 'bold',
+    boxShadow: '0 2px 8px rgba(255, 82, 82, 0.3)'
+  },
+  noCourses: {
+    textAlign: 'center',
+    color: '#ff8e53',
+    fontSize: '18px',
+    gridColumn: '1 / -1',
+    padding: '40px',
+    fontWeight: 'bold'
+  },
+  warningCard: { 
+    padding: '40px', 
+    textAlign: 'center', 
+    background: 'linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%)', 
+    borderRadius: '12px',
+    border: '2px solid #ffb74d',
+    color: '#e65100',
+    boxShadow: '0 4px 15px rgba(255, 183, 77, 0.2)'
+  }
+};
+
+
+
 
 // Embedded ViewApplications Component
 // Embedded ViewApplications Component - UPDATED VERSION
