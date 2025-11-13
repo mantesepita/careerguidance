@@ -690,6 +690,37 @@ const StudentHome = ({ studentData, styles, hoverStates, setHoverStates }) => {
 };
 
 // Student Profile Component
+// src/components/student/StudentProfile.js
+
+const AVAILABLE_SUBJECTS = [
+  'Mathematics',
+  'English',
+  'Sesotho',
+  'Physics',
+  'Chemistry',
+  'Biology',
+  'Agriculture',
+  'History',
+  'Geography',
+  'Development Studies',
+  'Computer Science',
+  'Accounting',
+  'Business Studies',
+  'Economics'
+];
+
+const GRADE_OPTIONS = ['A*', 'A', 'B', 'C', 'D', 'E', 'F'];
+
+const GRADE_POINTS = {
+  'A*': 7,
+  'A': 6,
+  'B': 5,
+  'C': 4,
+  'D': 3,
+  'E': 2,
+  'F': 1
+};
+
 const StudentProfile = ({ refreshData }) => {
   const { currentUser } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -711,10 +742,14 @@ const StudentProfile = ({ refreshData }) => {
     highSchool: {
       name: '',
       graduationYear: '',
-      points: '',
-      subjects: ''
+      points: 0,
+      subjects: []
     }
   });
+
+  const [selectedSubjects, setSelectedSubjects] = useState([
+    { subject: '', grade: '' }
+  ]);
 
   useEffect(() => {
     loadStudentProfile();
@@ -724,17 +759,34 @@ const StudentProfile = ({ refreshData }) => {
     if (currentUser) {
       const result = await getDocument('students', currentUser.uid);
       if (result.success && result.data) {
-        setFormData(prev => ({
-          ...prev,
-          ...result.data,
+        // Safe data loading with fallbacks for undefined values
+        setFormData({
+          firstName: result.data.firstName || '',
+          lastName: result.data.lastName || '',
+          idNumber: result.data.idNumber || '',
+          dateOfBirth: result.data.dateOfBirth || '',
+          gender: result.data.gender || '',
+          phone: result.data.phone || '',
+          address: result.data.address || '',
+          emergencyContact: {
+            name: result.data.emergencyContact?.name || '',
+            relationship: result.data.emergencyContact?.relationship || '',
+            phone: result.data.emergencyContact?.phone || ''
+          },
           highSchool: {
-            ...prev.highSchool,
-            ...result.data.highSchool,
-            subjects: Array.isArray(result.data.highSchool?.subjects) 
-              ? result.data.highSchool.subjects.join(', ') 
-              : result.data.highSchool?.subjects || ''
+            name: result.data.highSchool?.name || '',
+            graduationYear: result.data.highSchool?.graduationYear || '',
+            points: result.data.highSchool?.points || 0,
+            subjects: result.data.highSchool?.subjects || []
           }
-        }));
+        });
+        
+        // Load existing subjects safely
+        if (result.data.highSchool?.subjects && result.data.highSchool.subjects.length > 0) {
+          setSelectedSubjects(result.data.highSchool.subjects);
+        } else {
+          setSelectedSubjects([{ subject: '', grade: '' }]);
+        }
       }
     }
   };
@@ -759,6 +811,44 @@ const StudentProfile = ({ refreshData }) => {
     }
   };
 
+  const handleSubjectChange = (index, field, value) => {
+    const updated = [...selectedSubjects];
+    updated[index][field] = value;
+    setSelectedSubjects(updated);
+    
+    // Auto-calculate points
+    calculateTotalPoints(updated);
+  };
+
+  const addSubject = () => {
+    if (selectedSubjects.length < 10) {
+      setSelectedSubjects([...selectedSubjects, { subject: '', grade: '' }]);
+    }
+  };
+
+  const removeSubject = (index) => {
+    const updated = selectedSubjects.filter((_, i) => i !== index);
+    setSelectedSubjects(updated);
+    calculateTotalPoints(updated);
+  };
+
+  const calculateTotalPoints = (subjects) => {
+    const totalPoints = subjects.reduce((sum, item) => {
+      if (item.subject && item.grade) {
+        return sum + (GRADE_POINTS[item.grade] || 0);
+      }
+      return sum;
+    }, 0);
+
+    setFormData(prev => ({
+      ...prev,
+      highSchool: {
+        ...prev.highSchool,
+        points: totalPoints
+      }
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -766,23 +856,24 @@ const StudentProfile = ({ refreshData }) => {
     setSuccess('');
 
     try {
-      // Parse subjects string into array
-      const subjectsArray = formData.highSchool.subjects
-        .split(',')
-        .map(s => s.trim())
-        .filter(s => s);
+      // Validate subjects
+      const validSubjects = selectedSubjects.filter(s => s.subject && s.grade);
+      
+      if (validSubjects.length === 0) {
+        setError('Please add at least one subject with a grade');
+        setLoading(false);
+        return;
+      }
 
       const profileData = {
         ...formData,
         highSchool: {
           ...formData.highSchool,
-          points: parseInt(formData.highSchool.points) || 0,
-          graduationYear: parseInt(formData.highSchool.graduationYear) || new Date().getFullYear(),
-          subjects: subjectsArray
+          graduationYear: parseInt(formData.highSchool.graduationYear) || 0,
+          subjects: validSubjects
         },
         currentStatus: 'seeking-admission',
-        profileCompleted: true,
-        lastUpdated: new Date().toISOString()
+        profileCompleted: true
       };
 
       // Check if profile exists
@@ -790,18 +881,17 @@ const StudentProfile = ({ refreshData }) => {
       
       let result;
       if (existingProfile.success && existingProfile.data) {
-        // Update existing profile
         result = await updateDocument('students', currentUser.uid, profileData);
       } else {
-        // Create new profile
-        result = await createDocument('students', { ...profileData, id: currentUser.uid });
+        result = await createDocumentWithId('students', currentUser.uid, profileData);
       }
 
       if (result.success) {
         setSuccess('Profile saved successfully!');
         if (refreshData) refreshData();
+        window.scrollTo(0, 0);
       } else {
-        setError('Failed to save profile: ' + (result.error || 'Unknown error'));
+        setError(result.error || 'Failed to save profile');
       }
     } catch (err) {
       setError('Failed to save profile: ' + err.message);
@@ -810,143 +900,9 @@ const StudentProfile = ({ refreshData }) => {
     setLoading(false);
   };
 
-  const styles = {
-    container: {
-      maxWidth: '900px',
-      margin: '0 auto'
-    },
-    title: {
-      fontSize: '32px',
-      margin: '0 0 10px 0',
-      color: '#2c3e50',
-      background: 'linear-gradient(135deg, #dc2626, #ec4899)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-      backgroundClip: 'text',
-      fontWeight: 'bold'
-    },
-    subtitle: {
-      fontSize: '16px',
-      color: '#7f8c8d',
-      marginBottom: '30px'
-    },
-    successAlert: {
-      backgroundColor: '#d4edda',
-      color: '#155724',
-      padding: '15px',
-      borderRadius: '8px',
-      marginBottom: '20px',
-      border: '1px solid #c3e6cb'
-    },
-    errorAlert: {
-      backgroundColor: '#f8d7da',
-      color: '#721c24',
-      padding: '15px',
-      borderRadius: '8px',
-      marginBottom: '20px',
-      border: '1px solid #f5c6cb'
-    },
-    form: {
-      backgroundColor: 'white',
-      padding: '30px',
-      borderRadius: '12px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-      border: '1px solid #fed7aa'
-    },
-    section: {
-      marginBottom: '35px',
-      paddingBottom: '35px',
-      borderBottom: '1px solid #e9ecef'
-    },
-    sectionTitle: {
-      fontSize: '20px',
-      marginBottom: '20px',
-      color: '#2c3e50',
-      fontWeight: '600',
-      borderBottom: '2px solid #fed7aa',
-      paddingBottom: '10px'
-    },
-    row: {
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr',
-      gap: '20px',
-      marginBottom: '20px'
-    },
-    formGroup: {
-      marginBottom: '20px'
-    },
-    label: {
-      display: 'block',
-      marginBottom: '8px',
-      color: '#2c3e50',
-      fontWeight: '600',
-      fontSize: '14px'
-    },
-    input: {
-      width: '100%',
-      padding: '12px',
-      border: '2px solid #e9ecef',
-      borderRadius: '8px',
-      fontSize: '14px',
-      boxSizing: 'border-box',
-      transition: 'border-color 0.3s'
-    },
-    select: {
-      width: '100%',
-      padding: '12px',
-      border: '2px solid #e9ecef',
-      borderRadius: '8px',
-      fontSize: '14px',
-      boxSizing: 'border-box',
-      backgroundColor: 'white',
-      cursor: 'pointer'
-    },
-    textarea: {
-      width: '100%',
-      padding: '12px',
-      border: '2px solid #e9ecef',
-      borderRadius: '8px',
-      fontSize: '14px',
-      boxSizing: 'border-box',
-      fontFamily: 'inherit',
-      resize: 'vertical'
-    },
-    helpText: {
-      color: '#7f8c8d',
-      fontSize: '12px',
-      marginTop: '5px',
-      display: 'block'
-    },
-    submitButton: {
-      width: '100%',
-      padding: '15px',
-      background: 'linear-gradient(135deg, #f97316, #ec4899)',
-      color: 'white',
-      border: 'none',
-      borderRadius: '8px',
-      fontSize: '16px',
-      fontWeight: '600',
-      cursor: 'pointer',
-      transition: 'all 0.3s ease',
-      marginTop: '10px',
-      boxShadow: '0 4px 12px rgba(249, 115, 22, 0.3)'
-    },
-    submitButtonHover: {
-      transform: 'translateY(-2px)',
-      boxShadow: '0 6px 20px rgba(249, 115, 22, 0.4)'
-    },
-    submitButtonDisabled: {
-      opacity: 0.7,
-      cursor: 'not-allowed',
-      transform: 'none'
-    }
-  };
-
-  const [buttonHover, setButtonHover] = useState(false);
-
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}> Student Profile</h1>
+      <h1 style={styles.title}>My Profile</h1>
       <p style={styles.subtitle}>Complete your profile to start applying for courses</p>
 
       {success && <div style={styles.successAlert}>{success}</div>}
@@ -1137,34 +1093,78 @@ const StudentProfile = ({ refreshData }) => {
             </div>
           </div>
 
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Total Points *</label>
-            <input
-              type="number"
-              name="highSchool.points"
-              value={formData.highSchool.points}
-              onChange={handleChange}
-              required
-              style={styles.input}
-              placeholder="Enter total points (0-50)"
-              min="0"
-              max="50"
-            />
-            <small style={styles.helpText}>Your total high school points</small>
-          </div>
-
+          {/* Subjects & Grades Section */}
           <div style={styles.formGroup}>
             <label style={styles.label}>Subjects & Grades *</label>
-            <textarea
-              name="highSchool.subjects"
-              value={formData.highSchool.subjects}
-              onChange={handleChange}
-              required
-              style={styles.textarea}
-              placeholder="Enter subjects and grades separated by commas&#10;Example: Mathematics: A, English: B, Physics: C"
-              rows="4"
-            />
-            <small style={styles.helpText}>Separate each subject with a comma</small>
+            <small style={styles.helpText}>
+              Select your subjects and corresponding grades
+            </small>
+
+            {selectedSubjects.map((item, index) => (
+              <div key={index} style={styles.subjectRow}>
+                <select
+                  value={item.subject}
+                  onChange={(e) => handleSubjectChange(index, 'subject', e.target.value)}
+                  style={styles.subjectSelect}
+                  required
+                >
+                  <option value="">Select Subject</option>
+                  {AVAILABLE_SUBJECTS.map(subject => (
+                    <option 
+                      key={subject} 
+                      value={subject}
+                      disabled={selectedSubjects.some((s, i) => i !== index && s.subject === subject)}
+                    >
+                      {subject}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={item.grade}
+                  onChange={(e) => handleSubjectChange(index, 'grade', e.target.value)}
+                  style={styles.gradeSelect}
+                  required
+                >
+                  <option value="">Grade</option>
+                  {GRADE_OPTIONS.map(grade => (
+                    <option key={grade} value={grade}>
+                      {grade}
+                    </option>
+                  ))}
+                </select>
+
+                <span style={styles.pointsDisplay}>
+                  {item.grade ? `${GRADE_POINTS[item.grade]} pts` : '0 pts'}
+                </span>
+
+                {selectedSubjects.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeSubject(index)}
+                    style={styles.removeButton}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            ))}
+
+            {selectedSubjects.length < 10 && (
+              <button
+                type="button"
+                onClick={addSubject}
+                style={styles.addButton}
+              >
+                Add Another Subject
+              </button>
+            )}
+          </div>
+
+          {/* Total Points Display */}
+          <div style={styles.pointsSummary}>
+            <strong>Total Points:</strong>
+            <span style={styles.totalPoints}>{formData.highSchool.points}</span>
           </div>
         </div>
 
@@ -1173,17 +1173,216 @@ const StudentProfile = ({ refreshData }) => {
           disabled={loading}
           style={{
             ...styles.submitButton,
-            ...(buttonHover && styles.submitButtonHover),
-            ...(loading && styles.submitButtonDisabled)
+            opacity: loading ? 0.7 : 1,
+            cursor: loading ? 'not-allowed' : 'pointer'
           }}
-          onMouseEnter={() => setButtonHover(true)}
-          onMouseLeave={() => setButtonHover(false)}
         >
-          {loading ? 'Saving...' : ' Save Profile'}
+          {loading ? 'Saving...' : 'Save Profile'}
         </button>
       </form>
     </div>
   );
+};
+
+// Keep your existing styles here...
+const styles = {
+  container: {
+    maxWidth: '900px',
+    margin: '0 auto',
+    padding: '20px',
+    background: 'linear-gradient(135deg, #fff5f5 0%, #fff0f5 100%)',
+    minHeight: '100vh'
+  },
+  title: {
+    fontSize: '32px',
+    margin: '0 0 10px 0',
+    color: '#ff6b35',
+    fontWeight: 'bold',
+    textShadow: '1px 1px 2px rgba(0,0,0,0.1)'
+  },
+  subtitle: {
+    fontSize: '16px',
+    color: '#ff8e53',
+    marginBottom: '30px',
+    fontWeight: '500'
+  },
+  successAlert: {
+    background: 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
+    color: 'white',
+    padding: '15px',
+    borderRadius: '8px',
+    marginBottom: '20px',
+    border: 'none',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)'
+  },
+  errorAlert: {
+    background: 'linear-gradient(135deg, #ff5252 0%, #ff7979 100%)',
+    color: 'white',
+    padding: '15px',
+    borderRadius: '8px',
+    marginBottom: '20px',
+    border: 'none',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    boxShadow: '0 4px 12px rgba(255, 82, 82, 0.3)'
+  },
+  form: {
+    background: 'linear-gradient(135deg, #fffaf0 0%, #fff5ee 100%)',
+    padding: '30px',
+    borderRadius: '12px',
+    marginBottom: '25px',
+    border: '2px solid #ffb74d',
+    boxShadow: '0 4px 15px rgba(255, 183, 77, 0.2)'
+  },
+  section: {
+    marginBottom: '35px',
+    paddingBottom: '35px',
+    borderBottom: '2px solid #ffb74d'
+  },
+  sectionTitle: {
+    fontSize: '20px',
+    marginBottom: '20px',
+    color: '#ff6b35',
+    fontWeight: 'bold',
+    borderBottom: '3px solid #ff4081',
+    paddingBottom: '10px'
+  },
+  row: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '20px',
+    marginBottom: '20px'
+  },
+  formGroup: {
+    marginBottom: '20px'
+  },
+  label: {
+    display: 'block',
+    marginBottom: '8px',
+    color: '#ff6b35',
+    fontWeight: 'bold',
+    fontSize: '14px'
+  },
+  input: {
+    width: '100%',
+    padding: '12px',
+    border: '2px solid #ffb74d',
+    borderRadius: '8px',
+    fontSize: '14px',
+    boxSizing: 'border-box',
+    background: 'white',
+    transition: 'all 0.3s ease'
+  },
+  select: {
+    width: '100%',
+    padding: '12px',
+    border: '2px solid #ffb74d',
+    borderRadius: '8px',
+    fontSize: '14px',
+    boxSizing: 'border-box',
+    backgroundColor: 'white',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease'
+  },
+  helpText: {
+    color: '#ff8e53',
+    fontSize: '12px',
+    marginBottom: '10px',
+    display: 'block',
+    fontStyle: 'italic'
+  },
+  subjectRow: {
+    display: 'grid',
+    gridTemplateColumns: '2fr 1fr auto auto',
+    gap: '10px',
+    marginBottom: '10px',
+    alignItems: 'center',
+    padding: '12px',
+    background: 'white',
+    borderRadius: '8px',
+    border: '1px solid #ffb74d'
+  },
+  subjectSelect: {
+    padding: '10px',
+    border: '2px solid #ffb74d',
+    borderRadius: '6px',
+    fontSize: '14px',
+    backgroundColor: 'white',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease'
+  },
+  gradeSelect: {
+    padding: '10px',
+    border: '2px solid #ffb74d',
+    borderRadius: '6px',
+    fontSize: '14px',
+    backgroundColor: 'white',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease'
+  },
+  pointsDisplay: {
+    fontSize: '14px',
+    fontWeight: 'bold',
+    color: '#27ae60',
+    minWidth: '50px',
+    textAlign: 'center'
+  },
+  removeButton: {
+    padding: '10px 15px',
+    background: 'linear-gradient(135deg, #ff5252 0%, #ff7979 100%)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 'bold',
+    boxShadow: '0 2px 8px rgba(255, 82, 82, 0.3)',
+    transition: 'all 0.3s ease'
+  },
+  addButton: {
+    marginTop: '10px',
+    padding: '12px 18px',
+    background: 'linear-gradient(135deg, #ff6b35 0%, #ff8e53 100%)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: 'bold',
+    boxShadow: '0 2px 8px rgba(255, 107, 53, 0.3)',
+    transition: 'all 0.3s ease'
+  },
+  pointsSummary: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '15px 20px',
+    background: 'linear-gradient(135deg, #fffaf0 0%, #fff5ee 100%)',
+    borderRadius: '8px',
+    marginTop: '20px',
+    border: '2px solid #ffb74d'
+  },
+  totalPoints: {
+    fontSize: '24px',
+    fontWeight: 'bold',
+    color: '#ff6b35'
+  },
+  submitButton: {
+    width: '100%',
+    padding: '15px',
+    background: 'linear-gradient(135deg, #ff6b35 0%, #ff8e53 100%)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    fontSize: '16px',
+    fontWeight: 'bold',
+    cursor: 'pointer',
+    transition: 'all 0.3s ease',
+    marginTop: '10px',
+    boxShadow: '0 4px 15px rgba(255, 107, 53, 0.4)'
+  }
 };
 
 // Browse Courses Component
@@ -1653,6 +1852,7 @@ const BrowseCourses = ({ studentData }) => {
 };
 
 // My Applications Component
+// My Applications Component
 const MyApplications = () => {
   const { currentUser } = useAuth();
   const [applications, setApplications] = useState([]);
@@ -1696,30 +1896,47 @@ const MyApplications = () => {
     setDetailedApplications(detailed);
   };
 
-  const handleConfirmAdmission = async (applicationId, institutionId) => {
+  const handleConfirmAdmission = async (applicationId, institutionId, courseId) => {
     if (!window.confirm('Are you sure you want to accept this admission? This will reject all your other applications.')) {
       return;
     }
 
     try {
+      // Get all current applications
+      const allApplications = [...applications];
+      
       // Update this application to confirmed
       await updateDocument('applications', applicationId, {
-        confirmedAdmission: true
+        confirmedAdmission: true,
+        status: 'confirmed'
       });
+
+      // Reject all other applications
+      const otherApplications = allApplications.filter(app => app.id !== applicationId);
+      const rejectPromises = otherApplications.map(app => 
+        updateDocument('applications', app.id, {
+          status: 'rejected',
+          rejectionReason: 'Admission accepted at another institution'
+        })
+      );
+
+      await Promise.all(rejectPromises);
 
       // Update student status
       await updateDocument('students', currentUser.uid, {
         currentStatus: 'enrolled',
         enrolledInstitution: institutionId,
-        enrolledCourse: applications.find(app => app.id === applicationId).courseId
+        enrolledCourse: courseId,
+        enrollmentDate: new Date().toISOString()
       });
 
-      // Reload applications
+      // Reload applications to show updated statuses
       await loadApplications();
       
-      alert('Admission confirmed! Other applications have been cancelled.');
+      alert('Admission confirmed! Other applications have been automatically rejected.');
     } catch (error) {
       alert('Failed to confirm admission: ' + error.message);
+      console.error('Confirm admission error:', error);
     }
   };
 
@@ -1731,12 +1948,36 @@ const MyApplications = () => {
         return '#e74c3c';
       case 'waiting-list':
         return '#f39c12';
+      case 'confirmed':
+        return '#2ecc71';
+      case 'pending':
+        return '#3498db';
       default:
         return '#3498db';
     }
   };
 
-  
+  const getStatusText = (status, confirmedAdmission) => {
+    if (confirmedAdmission) {
+      return 'CONFIRMED';
+    }
+    switch (status) {
+      case 'admitted':
+        return 'ADMITTED';
+      case 'rejected':
+        return 'REJECTED';
+      case 'waiting-list':
+        return 'WAITING LIST';
+      case 'confirmed':
+        return 'CONFIRMED';
+      case 'pending':
+        return 'PENDING REVIEW';
+      default:
+        return status?.toUpperCase() || 'PENDING';
+    }
+  };
+
+  const hasConfirmedAdmission = detailedApplications.some(app => app.confirmedAdmission);
 
   const styles = {
     container: {
@@ -1770,10 +2011,6 @@ const MyApplications = () => {
       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
       border: '1px solid #fed7aa'
     },
-    emptyIcon: {
-      fontSize: '80px',
-      marginBottom: '20px'
-    },
     statsBar: {
       display: 'flex',
       gap: '20px',
@@ -1802,7 +2039,16 @@ const MyApplications = () => {
       padding: '25px',
       borderRadius: '12px',
       boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-      border: '1px solid #fed7aa'
+      border: '1px solid #fed7aa',
+      position: 'relative'
+    },
+    confirmedCard: {
+      border: '2px solid #2ecc71',
+      backgroundColor: '#f8fff8'
+    },
+    rejectedCard: {
+      backgroundColor: '#fff5f5',
+      opacity: 0.8
     },
     cardHeader: {
       display: 'flex',
@@ -1896,7 +2142,8 @@ const MyApplications = () => {
       color: '#155724',
       borderRadius: '8px',
       textAlign: 'center',
-      fontWeight: '600'
+      fontWeight: '600',
+      border: '1px solid #c3e6cb'
     },
     waitingNotice: {
       marginTop: '15px',
@@ -1904,7 +2151,17 @@ const MyApplications = () => {
       backgroundColor: '#fff3cd',
       color: '#856404',
       borderRadius: '8px',
-      textAlign: 'center'
+      textAlign: 'center',
+      border: '1px solid #ffeaa7'
+    },
+    rejectedNotice: {
+      marginTop: '15px',
+      padding: '15px',
+      backgroundColor: '#f8d7da',
+      color: '#721c24',
+      borderRadius: '8px',
+      textAlign: 'center',
+      border: '1px solid #f5c6cb'
     }
   };
 
@@ -1919,9 +2176,8 @@ const MyApplications = () => {
   if (detailedApplications.length === 0) {
     return (
       <div style={styles.container}>
-        <h1 style={styles.title}> My Applications</h1>
+        <h1 style={styles.title}>My Applications</h1>
         <div style={styles.emptyState}>
-          
           <h2>No Applications Yet</h2>
           <p>You haven't applied to any courses yet. Start browsing courses to apply!</p>
         </div>
@@ -1931,7 +2187,7 @@ const MyApplications = () => {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}> My Applications</h1>
+      <h1 style={styles.title}>My Applications</h1>
       <p style={styles.subtitle}>Track your course applications</p>
 
       <div style={styles.statsBar}>
@@ -1945,13 +2201,29 @@ const MyApplications = () => {
           <strong>Admitted:</strong> {detailedApplications.filter(a => a.status === 'admitted').length}
         </div>
         <div style={styles.statItem}>
+          <strong>Confirmed:</strong> {detailedApplications.filter(a => a.confirmedAdmission).length}
+        </div>
+        <div style={styles.statItem}>
           <strong>Rejected:</strong> {detailedApplications.filter(a => a.status === 'rejected').length}
         </div>
       </div>
 
+      {hasConfirmedAdmission && (
+        <div style={styles.confirmedBadge}>
+          You have confirmed your admission. Other applications have been automatically rejected.
+        </div>
+      )}
+
       <div style={styles.applicationsList}>
         {detailedApplications.map(app => (
-          <div key={app.id} style={styles.applicationCard}>
+          <div 
+            key={app.id} 
+            style={{
+              ...styles.applicationCard,
+              ...(app.confirmedAdmission && styles.confirmedCard),
+              ...(app.status === 'rejected' && styles.rejectedCard)
+            }}
+          >
             <div style={styles.cardHeader}>
               <div>
                 <h3 style={styles.institutionName}>{app.institutionName}</h3>
@@ -1960,9 +2232,9 @@ const MyApplications = () => {
               </div>
               <div style={{
                 ...styles.statusBadge,
-                backgroundColor: getStatusColor(app.status)
+                backgroundColor: getStatusColor(app.confirmedAdmission ? 'confirmed' : app.status)
               }}>
-                {app.status.toUpperCase()}
+                {getStatusText(app.status, app.confirmedAdmission)}
               </div>
             </div>
 
@@ -1990,26 +2262,32 @@ const MyApplications = () => {
                 </div>
               )}
 
-              {app.status === 'admitted' && !app.confirmedAdmission && (
+              {app.status === 'admitted' && !app.confirmedAdmission && !hasConfirmedAdmission && (
                 <div style={styles.admissionActions}>
                   <div style={styles.admissionNotice}>
                     <strong>Congratulations!</strong> You've been admitted to this program.
                   </div>
                   <button
-                    onClick={() => handleConfirmAdmission(app.id, app.institutionId)}
+                    onClick={() => handleConfirmAdmission(app.id, app.institutionId, app.courseId)}
                     style={styles.confirmButton}
                   >
                     Accept Admission
                   </button>
                   <p style={styles.admissionWarning}>
-                    Accepting this admission will automatically cancel all other applications.
+                    Accepting this admission will automatically reject all other applications.
                   </p>
                 </div>
               )}
 
               {app.confirmedAdmission && (
                 <div style={styles.confirmedBadge}>
-                  Admission Confirmed - You are now enrolled in this program
+                  ✅ Admission Confirmed - You are now enrolled in this program
+                </div>
+              )}
+
+              {app.status === 'rejected' && (
+                <div style={styles.rejectedNotice}>
+                   Application Rejected {app.rejectionReason && `- ${app.rejectionReason}`}
                 </div>
               )}
 

@@ -3,6 +3,35 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getDocument, createDocumentWithId, updateDocument } from '../../firebase/helpers';
 
+const AVAILABLE_SUBJECTS = [
+  'Mathematics',
+  'English',
+  'Sesotho',
+  'Physics',
+  'Chemistry',
+  'Biology',
+  'Agriculture',
+  'History',
+  'Geography',
+  'Development Studies',
+  'Computer Science',
+  'Accounting',
+  'Business Studies',
+  'Economics'
+];
+
+const GRADE_OPTIONS = ['A*', 'A', 'B', 'C', 'D', 'E', 'F'];
+
+const GRADE_POINTS = {
+  'A*': 7,
+  'A': 6,
+  'B': 5,
+  'C': 4,
+  'D': 3,
+  'E': 2,
+  'F': 1
+};
+
 const StudentProfile = ({ refreshData }) => {
   const { currentUser } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -24,10 +53,14 @@ const StudentProfile = ({ refreshData }) => {
     highSchool: {
       name: '',
       graduationYear: '',
-      points: '',
-      subjects: ''
+      points: 0,
+      subjects: []
     }
   });
+
+  const [selectedSubjects, setSelectedSubjects] = useState([
+    { subject: '', grade: '' }
+  ]);
 
   useEffect(() => {
     loadStudentProfile();
@@ -38,6 +71,11 @@ const StudentProfile = ({ refreshData }) => {
       const result = await getDocument('students', currentUser.uid);
       if (result.success) {
         setFormData(result.data);
+        
+        // Load existing subjects
+        if (result.data.highSchool?.subjects && result.data.highSchool.subjects.length > 0) {
+          setSelectedSubjects(result.data.highSchool.subjects);
+        }
       }
     }
   };
@@ -62,6 +100,44 @@ const StudentProfile = ({ refreshData }) => {
     }
   };
 
+  const handleSubjectChange = (index, field, value) => {
+    const updated = [...selectedSubjects];
+    updated[index][field] = value;
+    setSelectedSubjects(updated);
+    
+    // Auto-calculate points
+    calculateTotalPoints(updated);
+  };
+
+  const addSubject = () => {
+    if (selectedSubjects.length < 10) {
+      setSelectedSubjects([...selectedSubjects, { subject: '', grade: '' }]);
+    }
+  };
+
+  const removeSubject = (index) => {
+    const updated = selectedSubjects.filter((_, i) => i !== index);
+    setSelectedSubjects(updated);
+    calculateTotalPoints(updated);
+  };
+
+  const calculateTotalPoints = (subjects) => {
+    const totalPoints = subjects.reduce((sum, item) => {
+      if (item.subject && item.grade) {
+        return sum + (GRADE_POINTS[item.grade] || 0);
+      }
+      return sum;
+    }, 0);
+
+    setFormData(prev => ({
+      ...prev,
+      highSchool: {
+        ...prev.highSchool,
+        points: totalPoints
+      }
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -69,19 +145,21 @@ const StudentProfile = ({ refreshData }) => {
     setSuccess('');
 
     try {
-      // Parse subjects string into array
-      const subjectsArray = formData.highSchool.subjects
-        .split(',')
-        .map(s => s.trim())
-        .filter(s => s);
+      // Validate subjects
+      const validSubjects = selectedSubjects.filter(s => s.subject && s.grade);
+      
+      if (validSubjects.length === 0) {
+        setError('Please add at least one subject with a grade');
+        setLoading(false);
+        return;
+      }
 
       const profileData = {
         ...formData,
         highSchool: {
           ...formData.highSchool,
-          points: parseInt(formData.highSchool.points),
           graduationYear: parseInt(formData.highSchool.graduationYear),
-          subjects: subjectsArray
+          subjects: validSubjects
         },
         currentStatus: 'seeking-admission',
         profileCompleted: true
@@ -92,10 +170,8 @@ const StudentProfile = ({ refreshData }) => {
       
       let result;
       if (existingProfile.success) {
-        // Update existing profile
         result = await updateDocument('students', currentUser.uid, profileData);
       } else {
-        // Create new profile
         result = await createDocumentWithId('students', currentUser.uid, profileData);
       }
 
@@ -115,7 +191,7 @@ const StudentProfile = ({ refreshData }) => {
 
   return (
     <div style={styles.container}>
-      <h1 style={styles.title}> My Profile</h1>
+      <h1 style={styles.title}>📋 My Profile</h1>
       <p style={styles.subtitle}>Complete your profile to start applying for courses</p>
 
       {success && <div style={styles.successAlert}>{success}</div>}
@@ -306,34 +382,78 @@ const StudentProfile = ({ refreshData }) => {
             </div>
           </div>
 
-          <div style={styles.formGroup}>
-            <label style={styles.label}>Total Points *</label>
-            <input
-              type="number"
-              name="highSchool.points"
-              value={formData.highSchool.points}
-              onChange={handleChange}
-              required
-              style={styles.input}
-              placeholder="Enter total points (0-50)"
-              min="0"
-              max="50"
-            />
-            <small style={styles.helpText}>Your total high school points</small>
-          </div>
-
+          {/* Subjects & Grades Section */}
           <div style={styles.formGroup}>
             <label style={styles.label}>Subjects & Grades *</label>
-            <textarea
-              name="highSchool.subjects"
-              value={formData.highSchool.subjects}
-              onChange={handleChange}
-              required
-              style={styles.textarea}
-              placeholder="Enter subjects and grades separated by commas&#10;Example: Mathematics: A, English: B, Physics: C"
-              rows="4"
-            />
-            <small style={styles.helpText}>Separate each subject with a comma</small>
+            <small style={styles.helpText}>
+              Select your subjects and corresponding grades
+            </small>
+
+            {selectedSubjects.map((item, index) => (
+              <div key={index} style={styles.subjectRow}>
+                <select
+                  value={item.subject}
+                  onChange={(e) => handleSubjectChange(index, 'subject', e.target.value)}
+                  style={styles.subjectSelect}
+                  required
+                >
+                  <option value="">Select Subject</option>
+                  {AVAILABLE_SUBJECTS.map(subject => (
+                    <option 
+                      key={subject} 
+                      value={subject}
+                      disabled={selectedSubjects.some((s, i) => i !== index && s.subject === subject)}
+                    >
+                      {subject}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={item.grade}
+                  onChange={(e) => handleSubjectChange(index, 'grade', e.target.value)}
+                  style={styles.gradeSelect}
+                  required
+                >
+                  <option value="">Grade</option>
+                  {GRADE_OPTIONS.map(grade => (
+                    <option key={grade} value={grade}>
+                      {grade}
+                    </option>
+                  ))}
+                </select>
+
+                <span style={styles.pointsDisplay}>
+                  {item.grade ? `${GRADE_POINTS[item.grade]} pts` : '0 pts'}
+                </span>
+
+                {selectedSubjects.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeSubject(index)}
+                    style={styles.removeButton}
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+            ))}
+
+            {selectedSubjects.length < 10 && (
+              <button
+                type="button"
+                onClick={addSubject}
+                style={styles.addButton}
+              >
+                + Add Another Subject
+              </button>
+            )}
+          </div>
+
+          {/* Total Points Display */}
+          <div style={styles.pointsSummary}>
+            <strong>Total Points:</strong>
+            <span style={styles.totalPoints}>{formData.highSchool.points}</span>
           </div>
         </div>
 
@@ -346,7 +466,7 @@ const StudentProfile = ({ refreshData }) => {
             cursor: loading ? 'not-allowed' : 'pointer'
           }}
         >
-          {loading ? 's Saving...' : ' Save Profile'}
+          {loading ? '💾 Saving...' : '💾 Save Profile'}
         </button>
       </form>
     </div>
@@ -436,21 +556,76 @@ const styles = {
     backgroundColor: 'white',
     cursor: 'pointer'
   },
-  textarea: {
-    width: '100%',
-    padding: '12px',
-    border: '2px solid #e9ecef',
-    borderRadius: '8px',
-    fontSize: '14px',
-    boxSizing: 'border-box',
-    fontFamily: 'inherit',
-    resize: 'vertical'
-  },
   helpText: {
     color: '#7f8c8d',
     fontSize: '12px',
-    marginTop: '5px',
+    marginBottom: '10px',
     display: 'block'
+  },
+  subjectRow: {
+    display: 'grid',
+    gridTemplateColumns: '2fr 1fr auto auto',
+    gap: '10px',
+    marginBottom: '10px',
+    alignItems: 'center'
+  },
+  subjectSelect: {
+    padding: '10px',
+    border: '2px solid #e9ecef',
+    borderRadius: '8px',
+    fontSize: '14px',
+    backgroundColor: 'white',
+    cursor: 'pointer'
+  },
+  gradeSelect: {
+    padding: '10px',
+    border: '2px solid #e9ecef',
+    borderRadius: '8px',
+    fontSize: '14px',
+    backgroundColor: 'white',
+    cursor: 'pointer'
+  },
+  pointsDisplay: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#27ae60',
+    minWidth: '50px',
+    textAlign: 'center'
+  },
+  removeButton: {
+    padding: '8px 12px',
+    backgroundColor: '#e74c3c',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    cursor: 'pointer',
+    fontSize: '16px',
+    fontWeight: 'bold'
+  },
+  addButton: {
+    marginTop: '10px',
+    padding: '10px 20px',
+    backgroundColor: '#3498db',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontSize: '14px',
+    fontWeight: '600'
+  },
+  pointsSummary: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '15px 20px',
+    backgroundColor: '#e7f3ff',
+    borderRadius: '8px',
+    marginTop: '20px'
+  },
+  totalPoints: {
+    fontSize: '24px',
+    fontWeight: 'bold',
+    color: '#27ae60'
   },
   submitButton: {
     width: '100%',
