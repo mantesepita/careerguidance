@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import logo from './logo.png';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -41,33 +42,34 @@ const Register = () => {
     setLoading(true);
 
     try {
+      // Fix: Pass profile data as an object, not just the name
+      const profileData = {
+        name: formData.name,
+        displayName: formData.name,
+      };
+
       const result = await register(
         formData.email,
         formData.password,
-        formData.name,
+        profileData, // Now passing object instead of just name
         formData.role
       );
       
       if (result.success) {
         console.log('Registration successful', result);
         
-        // Get user role from result
-        const userRole = result.userData?.role || formData.role;
+        // Show success message with verification instructions
+        setError('success: Registration successful! Please check your email for the verification link. You must verify your email before logging in.');
         
-        // Navigate based on role with fallback
-        if (userRole === 'admin') {
-          navigate('/admin');
-        } else if (userRole === 'student') {
-          navigate('/student');
-        } else if (userRole === 'institute' || userRole === 'institution') {
-          navigate('/institute');
-        } else if (userRole === 'company') {
-          navigate('/company');
-        } else {
-          // Fallback if role is undefined or unknown
-          console.warn('Unknown or undefined role:', userRole);
-          navigate('/dashboard'); // Fallback route
-        }
+        // Redirect to login page after a delay with success message
+        setTimeout(() => {
+          navigate('/login', { 
+            state: { 
+              message: 'Registration successful! Please check your email for verification link.' 
+            } 
+          });
+        }, 5000); // Increased to 5 seconds so user can read the message
+        
       } else {
         setError(result.error || 'Failed to register');
       }
@@ -327,27 +329,49 @@ const Register = () => {
           <div style={styles.cardContent}>
             {/* Header */}
             <div style={styles.header}>
-              <div style={styles.iconContainer}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
+              <div >
+                <img 
+                  src={logo}
+                  alt="logo" 
+                  width="50" 
+                  height="75"
+                />
               </div>
               <h1 style={styles.title}>
                 Create Account
               </h1>
               <p style={styles.subtitle}>
-                Join Our Career Guidance Platform
+                Connect with Your Career Today!
               </p>
             </div>
 
-            {/* Error message */}
+            {/* Success/Error message */}
             {error && (
-              <div style={styles.errorContainer}>
+              <div style={{
+                ...styles.errorContainer,
+                backgroundColor: error.startsWith('success:') 
+                  ? 'rgba(209, 250, 229, 0.8)' 
+                  : 'rgba(254, 226, 226, 0.8)',
+                border: error.startsWith('success:') 
+                  ? '1px solid #a7f3d0' 
+                  : '1px solid #fecaca'
+              }}>
                 <div style={styles.errorContent}>
-                  <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                  </svg>
-                  <span style={styles.errorText}>{error}</span>
+                  {error.startsWith('success:') ? (
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20" style={{ color: '#059669' }}>
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  ) : (
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                  <span style={{
+                    ...styles.errorText,
+                    color: error.startsWith('success:') ? '#059669' : '#dc2626'
+                  }}>
+                    {error.startsWith('success:') ? error.replace('success: ', '') : error}
+                  </span>
                 </div>
               </div>
             )}

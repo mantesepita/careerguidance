@@ -29,6 +29,7 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null); // Firebase Auth user object
   const [userData, setUserData] = useState(null);     // Firestore user data + role
   const [loading, setLoading] = useState(true);
+  const [isNewRegistration, setIsNewRegistration] = useState(false);
 
   // Map collections to their proper role names
   const collectionsMap = {
@@ -36,6 +37,56 @@ export const AuthProvider = ({ children }) => {
     'institutions': 'institute',
     'students': 'student',
     'companies': 'company'
+  };
+
+  // Rate limiting for login attempts
+  const loginAttempts = new Map();
+
+  const checkRateLimit = (email) => {
+    const now = Date.now();
+    const attempts = loginAttempts.get(email) || { count: 0, lastAttempt: 0, blockUntil: 0 };
+    
+    // Check if still in block period
+    if (now < attempts.blockUntil) {
+      const minutesLeft = Math.ceil((attempts.blockUntil - now) / (1000 * 60));
+      return {
+        allowed: false,
+        message: `Too many failed attempts. Please try again in ${minutesLeft} minute(s).`
+      };
+    }
+    
+    // Reset counter if more than 15 minutes have passed since last attempt
+    if (now - attempts.lastAttempt > 15 * 60 * 1000) {
+      attempts.count = 0;
+    }
+    
+    // Block for 15 minutes after 5 failed attempts
+    if (attempts.count >= 5) {
+      attempts.blockUntil = now + (15 * 60 * 1000); // 15 minutes block
+      loginAttempts.set(email, attempts);
+      return {
+        allowed: false,
+        message: "Too many failed attempts. Please try again in 15 minutes."
+      };
+    }
+    
+    return { allowed: true };
+  };
+
+  const updateRateLimit = (email, success) => {
+    const attempts = loginAttempts.get(email) || { count: 0, lastAttempt: 0, blockUntil: 0 };
+    
+    if (success) {
+      // Reset on successful login
+      attempts.count = 0;
+      attempts.blockUntil = 0;
+    } else {
+      // Increment on failed attempt
+      attempts.count++;
+      attempts.lastAttempt = Date.now();
+    }
+    
+    loginAttempts.set(email, attempts);
   };
 
   /**
@@ -88,7 +139,34 @@ export const AuthProvider = ({ children }) => {
    */
   const login = async (email, password) => {
     try {
+      // Input validation
+      if (!email || !password) {
+        return { 
+          success: false, 
+          error: "Email and password are required." 
+        };
+      }
+
+      // Check rate limiting
+      const rateLimitCheck = checkRateLimit(email);
+      if (!rateLimitCheck.allowed) {
+        return { 
+          success: false, 
+          error: rateLimitCheck.message 
+        };
+      }
+
       const result = await signInWithEmailAndPassword(auth, email, password);
+      
+      // CRITICAL: Check email verification before allowing login
+      if (!result.user.emailVerified) {
+        await signOut(auth);
+        updateRateLimit(email, false);
+        return { 
+          success: false, 
+          error: "Please verify your email address before logging in. Check your inbox for the verification link." 
+        };
+      }
       
       // Fetch user data and wait for it
       const userData = await fetchUserData(result.user);
@@ -96,11 +174,15 @@ export const AuthProvider = ({ children }) => {
       if (!userData) {
         // Log out the user if Firestore data is missing despite successful authentication
         await signOut(auth);
+        updateRateLimit(email, false);
         return { 
           success: false, 
           error: "Your user data could not be found. Please contact support." 
         };
       }
+
+      // Reset rate limit on successful login
+      updateRateLimit(email, true);
 
       // Return both success status and user data with role
       return { 
@@ -110,6 +192,10 @@ export const AuthProvider = ({ children }) => {
       };
     } catch (error) {
       console.error('Login error:', error);
+      
+      // Update rate limit for failed attempt
+      updateRateLimit(email, false);
+      
       // Return error in consistent format
       let errorMessage = 'Failed to login. Please try again.';
       
@@ -125,7 +211,7 @@ export const AuthProvider = ({ children }) => {
           errorMessage = 'No account found with this email address.';
           break;
         case 'auth/wrong-password':
-        case 'auth/invalid-credential': // Modern Firebase Auth error code for wrong password/email
+        case 'auth/invalid-credential':
           errorMessage = 'Incorrect email or password. Please try again.';
           break;
         case 'auth/too-many-requests':
@@ -155,6 +241,67 @@ export const AuthProvider = ({ children }) => {
    */
   const register = async (email, password, profileData, role) => {
     try {
+      // Input validation
+      if (!email || !password || !profileData || !role) {
+        return { success: false, error: "All fields are required." };
+      }
+
+      // Enhanced email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return { success: false, error: "Please enter a valid email address." };
+      }
+
+      // Additional email validation checks
+      if (email.length > 254) { // RFC 5321 limit
+        return { success: false, error: "Email address is too long." };
+      }
+
+      const parts = email.split('@');
+      if (parts[0].length > 64) { // Local part limit
+        return { success: false, error: "Invalid email address format." };
+      }
+
+      const domain = parts[1];
+      const domainRegex = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      if (!domainRegex.test(domain)) {
+        return { success: false, error: "Please enter a valid email domain." };
+      }
+
+      // Check for common fake email patterns
+      const fakeEmailPatterns = [
+        /^test@/i,
+        /^fake@/i,
+        /^demo@/i,
+        /^temp@/i,
+        /@example\./i,
+        /@test\./i,
+        /@fake\./i,
+        /@temp\./i,
+        /123@/,
+        /admin@/i
+      ];
+
+      for (const pattern of fakeEmailPatterns) {
+        if (pattern.test(email)) {
+          return { success: false, error: "Please use a valid personal or work email address." };
+        }
+      }
+
+      // Validate role
+      const validRoles = ['admin', 'institute', 'student', 'company'];
+      if (!validRoles.includes(role)) {
+        return { success: false, error: "Invalid user role specified." };
+      }
+
+      // Validate profile data (basic check)
+      if (typeof profileData !== 'object' || Object.keys(profileData).length === 0) {
+        return { success: false, error: "Profile data is required." };
+      }
+
+      // Set flag to indicate new registration
+      setIsNewRegistration(true);
+
       const result = await createUserWithEmailAndPassword(auth, email, password);
       const user = result.user;
       
@@ -175,25 +322,27 @@ export const AuthProvider = ({ children }) => {
       // Initial status is 'pending' for Institutions/Companies, 'active' for Students/Admins
       const initialStatus = (role === 'company' || role === 'institute') ? 'pending' : 'active';
 
-      // Save Firestore document
+      // Enhanced Firestore document with additional security fields
       const firestoreData = {
         ...profileData,
         email,
         role,
         createdAt: new Date().toISOString(),
         emailVerified: user.emailVerified,
-        status: initialStatus
+        status: initialStatus,
+        lastLogin: null,
+        loginCount: 0,
+        lastUpdated: new Date().toISOString()
       };
       
       await setDoc(doc(db, collectionName, user.uid), firestoreData);
 
-      // Fetch user data immediately
-      const fetchedUserData = await fetchUserData(user);
+      // IMPORTANT: Sign out the user immediately after registration
+      await signOut(auth);
 
       return { 
         success: true, 
-        userData: fetchedUserData,
-        role: fetchedUserData?.role 
+        message: "Registration successful! Please check your email for the verification link. You must verify your email before logging in."
       };
     } catch (error) {
       console.error('Registration error:', error);
@@ -268,6 +417,34 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
+   * Resends email verification to the current user.
+   * @returns {object} Success/error status.
+   */
+  const resendVerificationEmail = async () => {
+    try {
+      if (!currentUser) {
+        return { success: false, error: "No user is currently logged in." };
+      }
+      
+      if (currentUser.emailVerified) {
+        return { success: false, error: "Email is already verified." };
+      }
+      
+      await sendEmailVerification(currentUser);
+      return { 
+        success: true, 
+        message: "Verification email sent successfully. Please check your inbox." 
+      };
+    } catch (error) {
+      console.error('Resend verification error:', error);
+      return { 
+        success: false, 
+        error: "Failed to send verification email. Please try again." 
+      };
+    }
+  };
+
+  /**
    * Updates user profile data in Firestore.
    * @param {object} updates - The fields to update.
    * @returns {object} Success/error status.
@@ -327,6 +504,15 @@ export const AuthProvider = ({ children }) => {
   // Auth state listener - central hub for authentication changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      // If this is a new registration, don't automatically set the user
+      if (isNewRegistration) {
+        setIsNewRegistration(false);
+        setCurrentUser(null);
+        setUserData(null);
+        setLoading(false);
+        return;
+      }
+
       setCurrentUser(user);
 
       if (user) {
@@ -339,7 +525,7 @@ export const AuthProvider = ({ children }) => {
 
     // Cleanup subscription on component unmount
     return unsubscribe;
-  }, []); // Run only once on mount
+  }, [isNewRegistration]); // Run when isNewRegistration changes
 
   // Context value object
   const value = { 
@@ -353,7 +539,8 @@ export const AuthProvider = ({ children }) => {
     updateUserData,
     checkEmailVerified,
     reloadUser,
-    fetchUserData // Exported for manual data refresh outside of auth state changes
+    fetchUserData,
+    resendVerificationEmail
   };
 
   return (
